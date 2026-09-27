@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.cache/
+tools/.ref/
+.npm-cache/
+*.local
+.DS_Store

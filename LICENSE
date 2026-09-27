@@ -1,0 +1,36 @@
+MIT License
+
+Copyright (c) 2026 lisongjianustc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+关于数据的一点说明 / A note on the data
+
+本仓库内的代码与地理数据（src/data/*.ts、public/basemap/*.geojson）均以 MIT 许可发布。
+
+底图为 Natural Earth（公有领域）。疆域与地点坐标为人工绘制与整理，未复制任何
+受限制的数据集。政权、事件、地点的史实依据见 README 的「史料来源」一节——
+那些是参考书目，不是随仓库分发的数据，各自的著作权仍归原作者与出版方。
+
+This repository contains no redistributed third-party historical GIS data.
+The basemap is Natural Earth (public domain); all territory and place
+coordinates are hand-drawn or hand-compiled. Bibliographic sources listed in
+the README are cited for provenance only and are not distributed here.

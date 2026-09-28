@@ -47,6 +47,14 @@ const CASES: Case[] = [
   { at: [105.85, 21.03], year: 230, city: '龙编', expect: ['wu:core'], why: '吴领交趾' },
   { at: [104.07, 30.67], year: 230, city: '成都', expect: [], reject: ['wei', 'wu'], why: '蜀地不属魏吴' },
 
+  // 内陆边界改为贴合真实山川之后新增的断言 —— 这些点最容易被「一条直线」画错
+  { at: [107.03, 33.07], year: 230, city: '汉中', expect: ['shu:core'], reject: ['wei'], why: '219 年后汉中属蜀，魏蜀以秦岭为界' },
+  { at: [103.79, 36.06], year: 230, city: '金城', expect: ['wei:core'], why: '曹魏领陇西、金城' },
+  { at: [116.78, 32.58], year: 230, city: '寿春', expect: ['wei:core'], reject: ['wu'], why: '曹魏据淮南，吴之北界是长江' },
+  { at: [117.23, 31.82], year: 230, city: '合肥', expect: ['wei:core'], reject: ['wu'], why: '合肥在长江以北，属魏' },
+  { at: [112.19, 30.35], year: 230, city: '江陵', expect: ['wu:core'], reject: ['wei'], why: '江陵在长江北岸，但 219 年后属吴 —— 早先魏走汉水、吴走长江，这里夹出过一道空缝' },
+  { at: [112.14, 32.02], year: 230, city: '襄阳', expect: ['wei:core'], reject: ['wu'], why: '襄阳属魏，与江陵隔荆山相望' },
+
   { at: [125.75, 39.03], year: 500, city: '平壤', expect: ['gaogouli:core'], why: '高句丽都平壤' },
   { at: [113.3, 40.1], year: 500, city: '平城', expect: ['wei_n:core'], why: '北魏旧都平城' },
   { at: [112.45, 34.62], year: 500, city: '洛阳', expect: ['wei_n:core'], why: '北魏 493 年迁洛' },

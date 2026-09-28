@@ -70,6 +70,28 @@ function mapPolygonFeatures(fc, tol) {
   return { type: 'FeatureCollection', features };
 }
 
+/** 把区域多边形转成折线（只要外环），好让 route.mjs 能沿山脊/盆地边缘走 */
+function mapRegionOutlines(fc, allow) {
+  const features = [];
+  for (const f of fc.features) {
+    const name = f.properties?.NAME ?? '';
+    if (!allow.some((a) => name.toLowerCase().includes(a.toLowerCase()))) continue;
+    const geom = f.geometry;
+    if (!geom) continue;
+    const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+    for (const poly of polys) {
+      const ring = poly[0].map(([lon, lat]) => [round(lon, 1000), round(lat, 1000)]);
+      if (ring.length < 4) continue;
+      features.push({
+        type: 'Feature',
+        properties: { name, featurecla: f.properties?.FEATURECLA ?? '' },
+        geometry: { type: 'LineString', coordinates: ring },
+      });
+    }
+  }
+  return { type: 'FeatureCollection', features };
+}
+
 function mapLineFeatures(fc, tol, bbox, keep) {
   const features = [];
   for (const f of fc.features) {
@@ -115,10 +137,20 @@ async function main() {
     mapLineFeatures(await fetchGeoJSON('ne_10m_coastline'), 0.02, VIEW),
     'coastline',
   );
+  // 放宽到 scalerank<=9 才拿得到淮河、黄河下游、汉水、无定河 —— 正是定义历史边界的那几条
   await write(
     resolve(REF, 'rivers.geojson'),
-    mapLineFeatures(await fetchGeoJSON('ne_10m_rivers_lake_centerlines'), 0.03, VIEW, (p) => (p.scalerank ?? 9) <= 6),
+    mapLineFeatures(await fetchGeoJSON('ne_10m_rivers_lake_centerlines'), 0.03, VIEW, (p) => (p.scalerank ?? 9) <= 9),
     'rivers',
+  );
+  await write(
+    resolve(REF, 'ranges.geojson'),
+    mapRegionOutlines(await fetchGeoJSON('ne_10m_geography_regions_polys'), [
+      'Qinling', 'Yin Mts', 'Taihang', 'Dabie', 'Nan Ling', 'KUNLUN', 'ALTUN', 'TIAN SHAN',
+      'SICHUAN BASIN', 'PLATEAU OF TIBET', 'TARIM BASIN', 'Loess Plateau', 'Mu Us', 'MANCHURIAN PLAIN',
+      'PAMIRS', 'HIMALAYAS', 'GOBI',
+    ]),
+    'ranges',
   );
 }
 

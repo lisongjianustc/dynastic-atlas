@@ -72,6 +72,25 @@ const nearest = ([x, y]) => {
   return best;
 };
 
+// --dump：不做路径搜索，直接把整条折线打印出来（区域外环用）
+if (args.some((a) => a === '--dump' || a.startsWith('--dump='))) {
+  const ringFeat = fc.features.find((f) => !grep || (f.properties?.name ?? '').toLowerCase().includes(grep.toLowerCase()));
+  if (!ringFeat) {
+    console.error('找不到要 dump 的要素');
+    process.exit(1);
+  }
+  const ring = ringFeat.geometry.coordinates;
+  const stepN = Number(opt('dump', '1')) || 1;
+  const pts = ring.filter((_, i) => i % stepN === 0);
+  console.log(`// ${ringFeat.properties?.name}: 外环 ${ring.length} 点，抽样后 ${pts.length} 点`);
+  console.log(`export const ${name}: Pt[] = [`);
+  for (let i = 0; i < pts.length; i += 5) {
+    console.log('  ' + pts.slice(i, i + 5).map((p) => `[${p[0].toFixed(2)}, ${p[1].toFixed(2)}]`).join(', ') + ',');
+  }
+  console.log('];');
+  process.exit(0);
+}
+
 const start = nearest(anchorA);
 const goal = nearest(anchorB);
 console.log(`// 锚点 ${anchorA} -> 节点 ${start} ${JSON.stringify([nodes[start].x, nodes[start].y])}`);

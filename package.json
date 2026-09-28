@@ -13,7 +13,8 @@
     "check:points": "mkdir -p .cache && esbuild tools/points.ts --bundle --platform=node --format=esm --outfile=.cache/points.mjs --log-level=error && node .cache/points.mjs",
     "preview:svg": "mkdir -p .cache && esbuild tools/preview.ts --bundle --platform=node --format=esm --outfile=.cache/preview.mjs --log-level=error && node .cache/preview.mjs",
     "shot": "esbuild --help >/dev/null && bash tools/shot.sh",
-    "verify": "npm run typecheck && npm run check:data && npm run check:points && npm run build"
+    "verify": "npm run typecheck && npm run check:data && npm run check:points && npm run build",
+    "regions": "node tools/gen-regions.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^4.7.1",

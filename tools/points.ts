@@ -93,6 +93,8 @@ const CASES: Case[] = [
   { at: [94.66, 40.14], year: 410, city: '敦煌', expect: ['xi_liang:core'], why: '西凉据敦煌' },
   { at: [94.66, 40.14], year: 430, city: '敦煌', expect: ['bei_liang:core'], reject: ['xi_liang'], why: '西凉 421 年亡，敦煌归北凉' },
   { at: [100.45, 38.93], year: 410, city: '张掖', expect: ['bei_liang:core'], why: '北凉都城' },
+  { at: [112.55, 37.87], year: 410, city: '晋阳', expect: ['wei_n:core'], why: '396 年北魏取并州，太原属魏' },
+  { at: [111.51, 36.09], year: 410, city: '平阳', expect: ['wei_n:core'], why: '晋南亦入北魏' },
   { at: [100.23, 25.6], year: 750, city: '太和城', expect: [], reject: ['tang'], why: '南诏 750 年后已脱离唐' },
   { at: [125.75, 39.03], year: 750, city: '平壤', expect: [], reject: ['tang'], why: '安东都护府 676 年内徙，唐已不直辖平壤' },
 

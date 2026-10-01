@@ -65,7 +65,7 @@ export default function CoveragePanel() {
 
       <ul className="cov-list">
         {entries.map((c) => (
-          <li key={c.id} className={`cov-item ${c.status}`}>
+          <li key={c.id} data-coverage-id={c.id} className={`cov-item ${c.status}`}>
             <div className="cov-head">
               <span className={`cov-status ${c.status}`}>{STATUS_LABEL[c.status]}</span>
               <strong>{TOPIC_LABEL[c.topic]}</strong>

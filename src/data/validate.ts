@@ -90,6 +90,66 @@ const bbox = (g: [number, number][]) => {
 const bboxOverlap = (a: readonly number[], b: readonly number[]) =>
   a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
 
+/** 射线法：点是否落在环内 */
+function inRing(pt: readonly [number, number], ring: readonly [number, number][]): boolean {
+  const [x, y] = pt;
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** 点到环各边的最短距离（度） */
+function distToRing(p: readonly [number, number], ring: readonly [number, number][]): number {
+  let best = Infinity;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i];
+    const [x2, y2] = ring[i + 1];
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, ((p[0] - x1) * dx + (p[1] - y1) * dy) / L)) : 0;
+    best = Math.min(best, Math.hypot(p[0] - (x1 + t * dx), p[1] - (y1 + t * dy)));
+  }
+  return best;
+}
+
+/**
+ * 找同时并立、且**明显**交叠的 core 疆域。
+ *
+ * 「明显」的判据是顶点落在对方内部、且离对方边界超过 EPS ——
+ * 相邻多边形共享一条边界链时顶点必然贴着对方边界，射线法的结果是任意的，
+ * 不设这个内缩门槛会报出一堆假阳性。
+ *
+ * 这一条只给提示不给错误：十六国与隋唐的疆界变动频繁，而本模型每个区间
+ * 只有一个静态多边形，交叠在部分区域是**已知的表达局限**，记在 COVERAGE 里。
+ */
+function overlappingPairs(segments: Segment[]): string[] {
+  const EPS = 0.06;
+  const core = segments.filter((s) => s.control === 'core');
+  const found: string[] = [];
+  for (let i = 0; i < core.length; i++) {
+    for (let j = i + 1; j < core.length; j++) {
+      const a = core[i];
+      const b = core[j];
+      if (a.polityId === b.polityId) continue;
+      if (!(a.from < b.to && b.from < a.to)) continue;
+      const ba = bbox(a.geometry);
+      const bb2 = bbox(b.geometry);
+      if (!bboxOverlap(ba, bb2)) continue;
+      const deep = (pts: [number, number][], other: [number, number][]) =>
+        pts.some((p) => inRing(p, other) && distToRing(p, other) > EPS);
+      if (deep(a.geometry, b.geometry) || deep(b.geometry, a.geometry)) {
+        found.push(`${a.id} × ${b.id}`);
+      }
+    }
+  }
+  return found;
+}
+
 export function validateAtlas(bundle: AtlasBundle = REAL_BUNDLE): ValidationIssue[] {
   const { segments: SEGMENTS, events: EVENTS, places: PLACES, polities: POLITIES, sources: SOURCES } = bundle;
   const issues: ValidationIssue[] = [];
@@ -265,6 +325,17 @@ export function validateAtlas(bundle: AtlasBundle = REAL_BUNDLE): ValidationIssu
     if (p.validity && (p.from !== p.validity.start.earliest || p.to !== p.validity.endExclusive.latest)) {
       push('error', `polity ${p.id}`, '整数区间与 validity 不一致');
     }
+  }
+
+  // ── 同时并立政权的几何交叠 ──
+  const overlaps = overlappingPairs(SEGMENTS);
+  if (overlaps.length) {
+    push(
+      'warn',
+      'overlap',
+      `${overlaps.length} 对同时并立的直辖疆域存在几何交叠：${overlaps.slice(0, 4).join('、')}${overlaps.length > 4 ? ' 等' : ''}`,
+      '本模型每个状态区间只有一张静态多边形，边界变动频繁的年份会出现交叠。缺口清单里已如实登记。',
+    );
   }
 
   // ── 授权红线 ──

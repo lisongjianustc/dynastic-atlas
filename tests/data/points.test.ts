@@ -106,6 +106,39 @@ const CASES: PointCase[] = [
   { at: [125.75, 39.03], year: 670, city: '平壤', expect: ['tang:military'], why: '668–676 安东都护府治平壤' },
   { at: [94.66, 40.14], year: 800, city: '敦煌', expect: [], reject: ['tang'], why: '763 年后河西没于吐蕃' },
   { at: [94.66, 40.14], year: 800, city: '敦煌', expect: ['tubo:core'], why: '吐蕃据河西' },
+  // ── 十六国这 9 个政权改用真实地理参照之后新增的断言 ──
+  // 骨架：黄河中段（山西—陕西界）、太行中线、河西走廊（祁连北麓—北山）
+  { at: [111.51, 36.09], year: 310, city: '平阳', expect: ['han_zhao:core'], why: '汉赵前期都平阳，据汾河谷地南段' },
+  { at: [112.55, 37.87], year: 310, city: '晋阳', expect: [], reject: ['han_zhao'], why: '304–316 年晋阳在刘琨手中，不属汉赵' },
+  { at: [112.55, 37.87], year: 320, city: '晋阳', expect: ['han_zhao:core'], why: '316 年汉赵取晋阳，并州全境入版图' },
+  { at: [108.94, 34.27], year: 320, city: '长安', expect: ['han_zhao:core'], why: '汉赵后期据关中' },
+  { at: [112.45, 34.62], year: 320, city: '洛阳', expect: ['han_zhao:core'], why: '汉赵 311 年取洛阳，325 年前尚在' },
+
+  { at: [102.63, 37.93], year: 350, city: '姑臧', expect: ['qian_liang:core'], why: '前凉都姑臧，据河西走廊' },
+  { at: [100.45, 38.93], year: 350, city: '张掖', expect: ['qian_liang:core'], why: '前凉据张掖' },
+  { at: [94.66, 40.14], year: 350, city: '敦煌', expect: ['qian_liang:core'], why: '前凉据敦煌' },
+  { at: [103.79, 36.06], year: 350, city: '金城', expect: ['qian_liang:core'], why: '前凉东界至陇西金城' },
+
+  { at: [102.63, 37.93], year: 395, city: '姑臧', expect: ['hou_liang:core'], why: '后凉承前凉故地' },
+  { at: [94.66, 40.14], year: 395, city: '敦煌', expect: ['hou_liang:core'], why: '后凉据敦煌' },
+
+  { at: [98.51, 39.74], year: 410, city: '酒泉', expect: ['xi_liang:core'], why: '西凉据酒泉' },
+  { at: [100.45, 38.93], year: 410, city: '张掖', expect: ['bei_liang:core'], reject: ['xi_liang'], why: '410 年张掖属北凉，西凉止于酒泉以西' },
+  { at: [102.63, 37.93], year: 410, city: '姑臧', expect: ['bei_liang:core'], why: '沮渠蒙逊 410 年取姑臧' },
+  { at: [102.63, 37.93], year: 430, city: '姑臧', expect: ['bei_liang:core'], why: '北凉后期据河西全段' },
+
+  { at: [102.40, 36.48], year: 410, city: '乐都', expect: ['nan_liang:core'], why: '南凉都乐都，据湟水流域' },
+  { at: [102.63, 37.93], year: 410, city: '姑臧', expect: [], reject: ['nan_liang'], why: '南凉不越祁连山到走廊' },
+  { at: [104.10, 35.85], year: 410, city: '苑川', expect: ['xi_qin:core'], why: '西秦据陇西苑川' },
+  { at: [103.21, 35.60], year: 410, city: '枹罕', expect: ['xi_qin:core'], why: '西秦据枹罕' },
+
+  { at: [114.87, 38.52], year: 400, city: '中山', expect: ['hou_yan:core'], why: '后燕都中山' },
+  { at: [114.20, 36.33], year: 400, city: '邺', expect: ['hou_yan:core'], reject: ['nan_yan'], why: '邺在太行以东、黄河以北，属后燕' },
+  { at: [120.85, 41.10], year: 400, city: '龙城', expect: ['hou_yan:core'], why: '后燕据辽西龙城，407 年前' },
+  { at: [118.48, 36.70], year: 405, city: '广固', expect: ['nan_yan:core'], why: '南燕都广固，据山东' },
+  { at: [117.13, 36.19], year: 405, city: '泰山', expect: ['nan_yan:core'], why: '泰山在南燕境内' },
+  { at: [114.87, 38.52], year: 405, city: '中山', expect: [], reject: ['nan_yan'], why: '南燕不越黄河到河北' },
+
 ];
 
 describe('点落断言', () => {

@@ -36,13 +36,14 @@ describe('资料覆盖面板', () => {
     expect(screen.getByText(/全部待审/)).toBeInTheDocument();
   });
 
-  it('列出当前年份涉及的缺口，且与数据层一致', () => {
+  it('列出的缺口条数与数据层一致，且逐条渲染', () => {
     useApp.setState({ year: 410 });
-    render(<CoveragePanel />);
+    const { container } = render(<CoveragePanel />);
     const expected = coverageAt(410);
-    expect(screen.getByText(new RegExp(`涉及缺口`))).toBeInTheDocument();
-    // 十六国手绘这条必然覆盖 410 年
-    expect(screen.getByText(/十六国 13 个政权中/)).toBeInTheDocument();
+    expect(screen.getByText(/涉及缺口/)).toBeInTheDocument();
+    expect(container.querySelectorAll('[data-coverage-id]')).toHaveLength(expected.length);
+    // 十六国这条必然覆盖 410 年（按 id 断言，不绑文案）
+    expect(container.querySelector('[data-coverage-id="sixteen-kingdoms-handdrawn"]')).not.toBeNull();
     expect(expected.length).toBeGreaterThan(0);
   });
 
@@ -61,11 +62,12 @@ describe('资料覆盖面板', () => {
 
   it('换年份会换掉年份相关的缺口', async () => {
     useApp.setState({ year: 410 });
-    const { rerender } = render(<CoveragePanel />);
-    expect(screen.getByText(/河西诸凉/)).toBeInTheDocument();
+    const { container, rerender } = render(<CoveragePanel />);
+    // 河西走廊这条只覆盖 320–439
+    expect(container.querySelector('[data-coverage-id="hexi-corridor"]')).not.toBeNull();
     useApp.setState({ year: 618 });
     rerender(<CoveragePanel />);
-    expect(screen.queryByText(/河西诸凉/)).toBeNull();
+    expect(container.querySelector('[data-coverage-id="hexi-corridor"]')).toBeNull();
   });
 
   it('覆盖声明条数与数据层一致', () => {

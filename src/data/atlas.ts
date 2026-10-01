@@ -87,9 +87,12 @@ const RAW_SEGMENTS: RawSegment[] = [
   { id: 'bei_yan-01', polityId: 'bei_yan', from: 407, to: 436, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.bei_yan },
   { id: 'xia-01', polityId: 'xia', from: 407, to: 431, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.xia },
   { id: 'xi_qin-01', polityId: 'xi_qin', from: 385, to: 431, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.xi_qin },
-  { id: 'hou_liang-01', polityId: 'hou_liang', from: 386, to: 403, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.hou_liang },
+  { id: 'hou_liang-01', polityId: 'hou_liang', from: 386, to: 397, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-4', geometry: RINGS.hou_liang, note: '承前凉故地，据河西全段' },
+  { id: 'hou_liang-02', polityId: 'hou_liang', from: 397, to: 403, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-4', geometry: RINGS.hou_liang_late, note: '397 年南凉、北凉分出，只剩姑臧一带' },
   { id: 'nan_liang-01', polityId: 'nan_liang', from: 397, to: 414, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.nan_liang },
-  { id: 'bei_liang-01', polityId: 'bei_liang', from: 397, to: 439, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.bei_liang },
+  { id: 'bei_liang-01', polityId: 'bei_liang', from: 397, to: 410, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-4', geometry: RINGS.bei_liang_early, note: '据张掖一带的走廊中段' },
+  { id: 'bei_liang-02', polityId: 'bei_liang', from: 410, to: 421, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-4', geometry: RINGS.bei_liang_mid, note: '410 年沮渠蒙逊取姑臧' },
+  { id: 'bei_liang-03', polityId: 'bei_liang', from: 421, to: 439, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-4', geometry: RINGS.bei_liang, note: '421 年灭西凉，据河西全段' },
   { id: 'xi_liang-01', polityId: 'xi_liang', from: 400, to: 421, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-4', geometry: RINGS.xi_liang },
 
   // ── 南北朝 ──

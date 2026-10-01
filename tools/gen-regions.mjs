@@ -43,25 +43,30 @@ function ringOf(grep, sample = 1) {
   return { pts, src: hit.properties.name, raw: ring.length };
 }
 
-function ridgeOf(grep, lonA, lonB, step) {
+function ridgeOf(grep, lonA, lonB, step, axis = 'lon') {
   const rings = pick(RANGES, grep).map((f) => f.geometry.coordinates);
-  const cross = (x) => {
-    const ys = [];
+  // axis='lon'：沿经度切，取南北缘中线（东西走向的山脉，如秦岭）
+  // axis='lat'：沿纬度切，取东西缘中线（东北—西南走向的山脉，如太行）
+  const cross = (v) => {
+    const out = [];
     for (const ring of rings) {
       for (let i = 0; i < ring.length - 1; i++) {
         const [x1, y1] = ring[i];
         const [x2, y2] = ring[i + 1];
-        if ((x1 > x && x2 > x) || (x1 < x && x2 < x) || x1 === x2) continue;
-        ys.push(y1 + ((x - x1) / (x2 - x1)) * (y2 - y1));
+        const a = axis === 'lon' ? x1 : y1;
+        const b = axis === 'lon' ? x2 : y2;
+        if ((a > v && b > v) || (a < v && b < v) || a === b) continue;
+        const t = (v - a) / (b - a);
+        out.push(axis === 'lon' ? y1 + t * (y2 - y1) : x1 + t * (x2 - x1));
       }
     }
-    return [...new Set(ys.map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+    return [...new Set(out.map((n) => Math.round(n * 1000) / 1000))].sort((p, q) => p - q);
   };
   const pts = [];
-  for (let x = lonA; x <= lonB + 1e-9; x = Math.round((x + step) * 1000) / 1000) {
-    const ys = cross(x);
-    if (ys.length < 2) continue;
-    pts.push([x, (ys[0] + ys[ys.length - 1]) / 2]);
+  for (let v = lonA; v <= lonB + 1e-9; v = Math.round((v + step) * 1000) / 1000) {
+    const hits = cross(v);
+    if (hits.length < 2) continue;
+    pts.push(axis === 'lon' ? [v, (hits[0] + hits[hits.length - 1]) / 2] : [(hits[0] + hits[hits.length - 1]) / 2, v]);
   }
   return { pts, src: pick(RANGES, grep)[0].properties.name, raw: pts.length };
 }
@@ -143,7 +148,9 @@ const SPECS = [
   { name: 'KUNLUN_CREST', mode: 'ridge', grep: 'KUNLUN', lonA: 78, lonB: 99, step: 1.5 },
   { name: 'TIAN_SHAN_CREST', mode: 'ridge', grep: 'TIAN SHAN', lonA: 74, lonB: 92, step: 1.5 },
   { name: 'DABIE_CREST', mode: 'ridge', grep: 'Dabie', lonA: 113.2, lonB: 117, step: 0.4 },
+  { name: 'TAIHANG_CREST', mode: 'ridge', grep: 'Taihang', axis: 'lat', lonA: 35.6, lonB: 41.0, step: 0.35 },
   { name: 'HUANG_MID', mode: 'route', grep: 'Huang', a: [111.2, 40.3], b: [110.3, 34.6], step: 0.22 },
+  { name: 'HUANG_LOWER', mode: 'route', grep: 'Huang', a: [110.3, 34.6], b: [119.1, 37.8], step: 0.22 },
 ];
 
 let ts = `import type { Pt } from './geo';
@@ -160,7 +167,7 @@ for (const spec of SPECS) {
     spec.mode === 'ring'
       ? ringOf(spec.grep, spec.sample)
       : spec.mode === 'ridge'
-        ? ridgeOf(spec.grep, spec.lonA, spec.lonB, spec.step)
+        ? ridgeOf(spec.grep, spec.lonA, spec.lonB, spec.step, spec.axis ?? 'lon')
         : routeOf(spec.grep, spec.a, spec.b, spec.step);
   const how = spec.mode === 'ring' ? '外环' : spec.mode === 'ridge' ? '南北缘中线' : '河道';
   ts += `/** ${src} ${how}：${raw} → ${pts.length} 点 */\nexport const ${spec.name}: Pt[] = [\n${fmt(pts)}\n];\n\n`;

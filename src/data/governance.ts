@@ -98,7 +98,28 @@ const COMPILATION: Record<string, Compilation> = {
   'sui-02': { method: `${NE}：海岸线、长江、淮河、汉水`, sourceScale: '1:10m', errorNote: '交州段人工' },
 };
 
+const HEXI_CORRIDOR =
+  `依据真实州县坐标（敦煌 94.66,40.14 / 酒泉 98.51,39.74 / 张掖 100.45,38.93 / 姑臧 102.63,37.93 / 金城 103.79,36.06）` +
+  `与祁连北麓—北山走向定位走廊两缘；北山一侧无参照数据，为人工绘制`;
+
+const COMPILATION_MORE: Record<string, Compilation> = {
+  'han_zhao-01': { method: `${NE}：黄河中段河道（西界）+ 太行山脉南北缘中线（东界）`, sourceScale: '1:10m', errorNote: '南界（轵关—太行南端）为政治判断；晋阳此时在刘琨手中，未纳入' },
+  'han_zhao-02': { method: `${NE}：黄河中段河道 + 太行山脉中线 + 秦岭山脊`, sourceScale: '1:10m', errorNote: '关中北缘（北山）与陇西段为人工绘制；本环是凹的，黄河韩城以下为内线' },
+  'qian_liang-01': { method: `${NE}：河西走廊。${HEXI_CORRIDOR}`, errorNote: '东界陇山与南界河湟为政治判断' },
+  'hou_liang-01': { method: `${NE}：河西走廊。${HEXI_CORRIDOR}`, errorNote: '承前凉故地，边界取近似' },
+  'bei_liang-01': { method: `${NE}：河西走廊中段。${HEXI_CORRIDOR}`, errorNote: '前后两段的界线按 410 年取姑臧、421 年灭西凉分期' },
+  'bei_liang-02': { method: `${NE}：河西走廊全段。${HEXI_CORRIDOR}`, errorNote: '并西凉后的西界取玉门阳关一带' },
+  'xi_liang-01': { method: `${NE}：河西走廊西段。${HEXI_CORRIDOR}`, errorNote: '东界与北凉的分界为政治判断' },
+  'nan_liang-01': { method: '湟水流域：依据乐都（102.40,36.48）等真实坐标人工定位', errorNote: '未使用地理参照；北界取祁连南麓的大致走向' },
+  'xi_qin-01': { method: '陇西：依据苑川（104.10,35.85）、枹罕（103.21,35.60）、金城等真实坐标人工定位', errorNote: '北界与南凉共线，为政治判断' },
+  'hou_yan-01': { method: `${NE}：太行山脉南北缘中线（西界）+ 黄河下游河道（南界）`, sourceScale: '1:10m', errorNote: '黄河用现代河道；唐以前黄河走河北入海，与当时分界有出入。燕山与辽西段为人工绘制' },
+  'nan_yan-01': { method: `${NE}：黄河下游河道（北界）+ 海岸线（东界）`, sourceScale: '1:10m', errorNote: '黄河用现代河道；南界沂蒙—泰山段为人工绘制' },
+};
+
 const compilationOf = (id: string): Compilation =>
+  COMPILATION_MORE[id] ?? compilationOfBase(id);
+
+const compilationOfBase = (id: string): Compilation =>
   COMPILATION[id] ?? {
     method: HAND,
     errorNote: '本段未使用真实地理参照，轮廓为示意，不可用于精度要求高于「大致方位」的用途',
@@ -238,11 +259,19 @@ export const COVERAGE: CoverageEntry[] = [
   },
   {
     id: 'sixteen-kingdoms-handdrawn', startYear: 304, endYear: 439, topic: 'territory', status: 'pending',
-    reason: '十六国 13 个政权中，汉赵、前凉、后燕、南燕、西秦、后凉、南凉、北凉、西凉共 9 个仍是 0.1° 级手绘多边形，未使用真实山川参照。',
+    reason: '十六国 13 个政权已全部改用真实地理参照（黄河中段河道、太行山脉中线、河西走廊）。剩余问题是个别政治分界仍为直线段：陇山、河湟、燕山、沂蒙没有对应的地貌参照。',
   },
   {
-    id: 'hexi-powers', startYear: 320, endYear: 439, topic: 'territory', status: 'pending',
-    reason: '河西诸凉（前凉、后凉、北凉、西凉）在图上很小，轮廓仍为方块；河西走廊南北两山缺参照数据。',
+    id: 'hexi-corridor', startYear: 320, endYear: 439, topic: 'territory', status: 'pending',
+    reason: '河西走廊两缘按真实州县坐标定位，宽度约 1°。走廊北侧的北山—龙首山在 Natural Earth 里没有独立地貌单元，北缘为人工绘制。',
+  },
+  {
+    id: 'overlapping-territories', startYear: 200, endYear: 960, topic: 'territory', status: 'pending',
+    reason: '每个状态区间只有一张静态多边形，而边界变动频繁的年份里双方往往在同一片土地上拉锯，于是同时并立的直辖疆域会出现几何交叠。当下 51 对，实时数量见 npm run report 与校验器的 overlap 提示。集中在十六国的陇西与关东、以及隋唐与东突厥、回鹘、南诏、渤海、吐蕃之间 —— 这些政权本轮都还没有改用真实山川参照。',
+  },
+  {
+    id: 'yellow-river-anachronism', startYear: 200, endYear: 960, topic: 'territory', status: 'pending',
+    reason: '后燕、南燕的南北界用了黄河下游河道，但那是 1855 年铜瓦厢改道后的现代河道；唐以前黄河走河北入海，与当时分界有出入。',
   },
   {
     id: 'steppe-khanates', startYear: 552, endYear: 840, topic: 'territory', status: 'pending',

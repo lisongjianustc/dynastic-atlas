@@ -41,7 +41,7 @@ export default function SidePanel() {
     const prev = EVENTS[idx - 1];
     const next = EVENTS[idx + 1];
     return (
-      <aside className="side-panel">
+      <aside className="side-panel" data-testid="side-panel">
         <button className="close-btn" onClick={close} aria-label="关闭">
           ✕
         </button>

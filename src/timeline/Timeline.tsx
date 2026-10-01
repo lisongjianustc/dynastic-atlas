@@ -113,7 +113,7 @@ export default function Timeline() {
           ⏮ 变更
         </button>
         <div className="tl-readout">
-          <span className="tl-year">{yearLabel(year)}</span>
+          <span className="tl-year" data-testid="tl-year">{yearLabel(year)}</span>
           <span className="tl-interval">
             区间 {yearLabel(currentInterval.from)}–{yearLabel(currentInterval.to)} · 共 {currentTransition.events ? currentTransition.events.length : 0} 事
           </span>
@@ -133,6 +133,7 @@ export default function Timeline() {
             {yearEvents.map((e) => (
               <button
                 key={e.id}
+                data-testid="event-chip"
                 className={`ev-chip${selectedEventId === e.id ? ' on' : ''}`}
                 style={{ ['--c' as never]: EVENT_TYPE_COLORS[e.type] }}
                 onClick={() => selectEvent(e.id)}
@@ -143,7 +144,7 @@ export default function Timeline() {
             ))}
           </>
         ) : (
-          <span className="tl-events-empty">
+          <span className="tl-events-empty" data-testid="tl-no-events">
             {yearLabel(year)} 无纪事
             {prevEvt !== null && (
               <button className="link-btn" onClick={() => setYear(prevEvt)}>
@@ -234,7 +235,7 @@ export default function Timeline() {
         </div>
 
         {/* ④ 游标 */}
-        <div className="tl-cursor" style={{ left: `${pct(year)}%` }}>
+        <div className="tl-cursor" data-testid="tl-cursor" style={{ left: `${pct(year)}%` }}>
           <div className="tl-cursor-knob" />
           <div className="tl-cursor-line" />
         </div>

@@ -119,9 +119,9 @@ export default function App() {
         </div>
 
         <div className="clock">
-          <span className="clock-year">{yearLabel(year)}</span>
+          <span className="clock-year" data-testid="year">{yearLabel(year)}</span>
           <span className="clock-sub">
-            {POLITIES.filter((p) => p.from <= year && p.to > year).length} 个政权并存
+            <span data-testid="polity-count">{POLITIES.filter((p) => p.from <= year && p.to > year).length}</span> 个政权并存
           </span>
         </div>
 
@@ -155,10 +155,11 @@ export default function App() {
           </select>
         </div>
 
-        <button className="tbtn ghost" onClick={() => setPanelView('legend')}>
+        <button className="tbtn ghost" data-testid="tab-legend" onClick={() => setPanelView('legend')}>
           图例
         </button>
         <button
+          data-testid="tab-coverage"
           className={`tbtn ghost${panelView === 'coverage' ? ' on' : ''}`}
           onClick={() => setPanelView('coverage')}
           title="资料覆盖：这个项目还缺什么"

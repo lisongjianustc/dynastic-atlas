@@ -48,22 +48,63 @@ npm run basemap && npm run regions # 拉 Natural Earth 底图并生成参照几�
 npm run dev                        # http://localhost:5173
 ```
 
-## 交付前必须跑
+## 测试
 
 ```bash
-npm run verify
+npm run test        # vitest：192 个单元与数据测试（约 1 秒）
+npm run test:e2e    # playwright：17 个端到端（约 1 分钟）
+npm run verify      # typecheck + test + build —— 交付前跑这个
+npm run report      # 数据体检报告，只打印不断言
 ```
 
-等于 `typecheck` + `check:data` + `check:points` + `build` 四道门。前两道是数据纪律的机械闸门：
+测试分四层，各自守一件事：
 
-- **`check:data`** —— 逐段校验：出处是否登记、时间区间是否合法、外环是否闭合、**是否自交**、同政权同层级的时空双重重叠、并存政权是否撞色。
-  没有 `sourceId` 或指不到已登记来源的疆域段直接判 error，入不了库。
-- **证据闸门** —— 每条疆域段／事件／地点必须至少有一条 `evidence` 且指向已登记来源；
-  `redistribution=denied` 的来源必须写 `permissionEvidence`；`validity` 与整数区间必须自洽；
-  `snapshot` 必须给 `snapshotYear`。
-- **`check:points`** —— 把史地常识写成断言：洛阳在 230 年属曹魏、逻些在 750 年属吐蕃、敦煌在 800 年不属唐而属吐蕃、成都 330 年在成汉而非东晋、江陵 230 年属吴而不属魏，共 55 条。
-  **比肉眼看图可靠得多**——点落测试抓出过六处真实的画歪（含「东晋在 330 年不该有巴蜀」这类断代错误）。
-- `check:data` 还会逐个地点验证「它是否真的落在某个政权的面上」，专抓坐标画到海里或画到域外。
+| 层 | 位置 | 守什么 |
+|---|---|---|
+| **数据断言** | `tests/data/` | 史地常识与数据集不变式 |
+| **单元** | `tests/data/` | 状态机、几何原语、治理层 |
+| **状态** | `tests/state/` | store 与 URL 深链 |
+| **组件** | `tests/ui/` | 面板给用户的信息是否诚实 |
+| **端到端** | `tests/e2e/` | 真实浏览器里的完整链路 |
+
+### 数据断言里最要紧的两组
+
+**点落断言**（`tests/data/points.test.ts`，55 条）—— 把史地常识写成断言：
+洛阳在 230 年属曹魏、逻些在 750 年属吐蕃、成都 330 年在成汉而非东晋、江陵 230 年属吴而不属魏。
+**比肉眼看图可靠得多**，历史上它抓出过九处真实的画歪。
+
+**校验器的元测试**（`tests/data/validate.test.ts`，27 条）—— 逐条破坏一个不变式，
+断言对应的错误必须出现：没有出处、来源未登记、外环未闭合、**外环自交**、
+整数区间与 `validity` 不一致、`snapshot` 缺 `snapshotYear`、`denied` 来源没写 `permissionEvidence`、
+标了 `specified` 却写「人工绘制示意」、`verified` 却没写核验者……
+
+> **一个从不报错的校验器等于没有校验器。**
+> 所以这里不测「真实数据能通过」（那另有一条），而是证明闸门真的会拦人。
+
+### 这套测试抓到的真错误
+
+写这套测试的过程中，它当场抓出三处：
+
+- **鸠摩罗什 402 年入长安挂在了「前秦」名下** —— 而 `persons` 里写的却是姚兴。
+  前秦 394 年就亡了，迎他的是后秦。这条自相矛盾被「事件年份 vs 政权存续」的交叉断言逮住。
+- **两条事件摘要是 10 字以内**（「受禅建隋，北朝终结。」）—— 摘要太短等于没说发生了什么。
+- **测试夹具自己违反了不变式**（只改 `from`/`to` 而不同步 `validity`）——
+  这次是校验器对了、测试错了，也说明了参数化校验器的价值。
+
+另外顺手修掉：`?y=959` 再按「进 10 年」会被正确夹住（原先没测，也没人验过）。
+
+### 端到端怎么避开无头渲染的坑
+
+无头 SwiftShader 下 MapLibre 要 10 秒上下才就绪，**不用 sleep 猜**，
+而是轮询应用留给调试的 `window.__atlasMap.loaded()`。早先截图拍出全黑就是因为没等这一步。
+
+两个因此踩出来的细节，值得记下来：
+
+- 控制层级**不是**用图层 `filter` 隐藏的，而是靠 `fill-opacity` 里的 `match` 表达式置 0。
+  所以 `querySourceFeatures`（读瓦片缓存，不受 filter 影响）测不出来 ——
+  必须断言真正生效的绘制属性，或者用 `queryRenderedFeatures` 配图层 id。
+- 事件点那条断言直接读渲染出来的要素属性 `y`，逐个检查等于当前年份 ——
+  这是「不是把全部事件铺在图上」的机械证据。
 
 ## 目录
 
@@ -74,13 +115,18 @@ src/
   timeline/   四叠层时间轴
   panel/      图例、事件与政权详情
   state/      zustand
+tests/
+  data/       数据断言与单元测试（史地常识、状态机、几何、治理层、校验器元测试）
+  state/      store 与 URL 深链
+  ui/         面板组件
+  e2e/        playwright 端到端
+  fixtures/   测试夹具
 tools/
   build-basemap.mjs  拉 Natural Earth 底图（110m 给客户端）+ 10m 海岸线/河道/山脉（只给构建期）
   route.mjs          沿真实海岸线/河道走一遍，输出可直接粘进 geo.ts 的坐标数组
   ridge.mjs          取山脉多边形南北缘中线，得到山脊线（沿任一条边走都会切掉盆地）
   gen-regions.mjs    把参照几何生成 src/data/regions.ts（ring / ridge / route 三种取法）
-  check.ts           数据体检
-  points.ts          点落断言
+  check.ts           数据体检报告（只打印，断言在 tests/）
   preview.ts         把数据直接渲染成 SVG 接触表，不经浏览器验几何
   shot.sh / shot.mjs 无头截图（CDP 轮询到地图就绪再拍）
   probe.mjs          读浏览器控制台与网络记录

@@ -28,12 +28,16 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
-      # 数据纪律闸门。校验不过就不部署 —— 一条画歪的边界不该有机会上线。
-      - name: 数据校验（出处 / 自交 / 时空重叠 / 地点落位）
-        run: npm run check:data
+      # 数据纪律闸门。校验与断言不过就不部署 —— 一条画歪的边界不该有机会上线。
+      #
+      # tests/data 覆盖：数据校验器的元测试（逐条破坏不变式，证明闸门真的会拦）、
+      # 点落断言（史地常识）、状态机不变式、几何原语、治理层、地点落位。
+      # tests/state 与 tests/ui 覆盖 store 与面板。
+      - name: 单元与数据测试
+        run: npm run test
 
-      - name: 点落断言（史地常识）
-        run: npm run check:points
+      - name: 数据体检报告（仅打印，不拦）
+        run: npm run report
 
       - name: 构建
         run: npm run build

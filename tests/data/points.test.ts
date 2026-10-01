@@ -1,13 +1,26 @@
+import { activeSegmentsAt, yearLabel } from '../../src/data/state';
+
 /**
- * 点落测试：把确定无疑的史地事实（某城在某年属于某政权）当作断言。
- * 比肉眼看图可靠得多 —— 能精确抓出「面画歪了 / 边界串了」。
+ * 点落断言 —— 把史地常识写成测试。
  *
- *   npx esbuild tools/points.ts --bundle --platform=node --format=esm --outfile=/tmp/atlas-points.mjs && node /tmp/atlas-points.mjs
+ * 这是本项目最有价值的一组测试：肉眼看图看不出「汉中属魏还是属蜀」，
+ * 但一条射线法断言可以。历史上它抓出过九处真实的画歪：
+ *   - 东晋在 330 年不该有巴蜀（那是成汉的）
+ *   - 后燕的南界把都城邺关在外面 0.04°
+ *   - 北魏前期漏了 396 年就取得的并州
+ *   - 魏走汉水、吴走长江，江汉平原夹出空缝，江陵两边都不认
  */
-import { POLITIES, SEGMENTS } from '../src/data/atlas';
-import { activeSegmentsAt, yearLabel } from '../src/data/state';
 
 type Pt = [number, number];
+
+interface PointCase {
+  at: Pt;
+  year: number;
+  city: string;
+  expect: string[];
+  reject?: string[];
+  why: string;
+}
 
 function inRing(pt: Pt, ring: Pt[]): boolean {
   const [x, y] = pt;
@@ -20,25 +33,16 @@ function inRing(pt: Pt, ring: Pt[]): boolean {
   return inside;
 }
 
-/** 某点在某年落在哪些 (政权, 控制层级) 里 */
-function locate(pt: Pt, year: number) {
+/** 某点在某年落在哪些 (政权:控制层级) 里 */
+function locate(pt: Pt, year: number): string[] {
   return activeSegmentsAt(year)
     .filter((s) => inRing(pt, s.geometry as Pt[]))
     .map((s) => `${s.polityId}:${s.control}`);
 }
 
-interface Case {
-  at: Pt;
-  year: number;
-  city: string;
-  /** 应当命中：'polityId' 或 'polityId:control' */
-  expect: string[];
-  /** 应当不命中 */
-  reject?: string[];
-  why: string;
-}
+const hit = (hits: string[], want: string) => hits.some((h) => h === want || h.startsWith(`${want}:`));
 
-const CASES: Case[] = [
+const CASES: PointCase[] = [
   { at: [112.45, 34.62], year: 230, city: '洛阳', expect: ['wei:core'], why: '曹魏都洛阳' },
   { at: [108.94, 34.27], year: 230, city: '长安', expect: ['wei:core'], why: '曹魏据关中' },
   { at: [104.07, 30.67], year: 230, city: '成都', expect: ['shu:core'], why: '蜀汉都成都' },
@@ -104,27 +108,18 @@ const CASES: Case[] = [
   { at: [94.66, 40.14], year: 800, city: '敦煌', expect: ['tubo:core'], why: '吐蕃据河西' },
 ];
 
-let pass = 0;
-const fails: string[] = [];
+describe('点落断言', () => {
+  it('用例数量与史地覆盖面对得上', () => {
+    expect(CASES.length).toBeGreaterThanOrEqual(50);
+  });
 
-for (const c of CASES) {
-  const hits = locate(c.at, c.year);
-  const okExpect = c.expect.every((e) => hits.some((h) => h === e || h.startsWith(`${e}:`)));
-  const okReject = (c.reject ?? []).every((r) => !hits.some((h) => h === r || h.startsWith(`${r}:`)));
-  if (okExpect && okReject) {
-    pass++;
-  } else {
-    const want = c.expect.length ? `应命中 ${c.expect.join('/')}` : '';
-    const not = c.reject?.length ? `不应命中 ${c.reject.join('/')}` : '';
-    fails.push(
-      `✗ ${yearLabel(c.year)} ${c.city} [${c.at}] —— 实际落在 [${hits.join(', ') || '无'}]；${want} ${not}（${c.why}）`,
-    );
-  }
-}
-
-console.log(`点落测试：${pass}/${CASES.length} 通过`);
-if (fails.length) console.log(fails.join('\n'));
-
-// 政权层面：每个政权在其存续期内是否有段覆盖
-const missing = POLITIES.filter((p) => !SEGMENTS.some((s) => s.polityId === p.id));
-if (missing.length) console.log(`\n有政权定义但无疆域段：${missing.map((p) => p.name).join('、')}`);
+  it.each(CASES)('$year年 $city —— $why', (c) => {
+    const hits = locate(c.at, c.year);
+    for (const e of c.expect) {
+      expect(hit(hits, e), `${yearLabel(c.year)} ${c.city} 应命中 ${e}，实际落在 [${hits.join(', ') || '无'}]`).toBe(true);
+    }
+    for (const r of c.reject ?? []) {
+      expect(hit(hits, r), `${yearLabel(c.year)} ${c.city} 不应命中 ${r}，实际落在 [${hits.join(', ') || '无'}]`).toBe(false);
+    }
+  });
+});

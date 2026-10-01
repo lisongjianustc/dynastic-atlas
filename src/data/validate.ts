@@ -1,7 +1,27 @@
 import { EVENTS, POLITIES, SEGMENTS } from './atlas';
 import { PLACES } from './places';
 import { SOURCES } from './sources';
-import type { Evidence, Review } from './types';
+import type { AtlasEvent, Evidence, Place, Polity, Review, Segment, Source } from './types';
+
+/**
+ * 待校验的数据集。默认校验真实数据；测试会注入**故意损坏**的数据，
+ * 用来证明这道闸门真的会拦人 —— 一个从不报错的校验器等于没有校验器。
+ */
+export interface AtlasBundle {
+  segments: Segment[];
+  events: AtlasEvent[];
+  places: Place[];
+  polities: Polity[];
+  sources: Source[];
+}
+
+export const REAL_BUNDLE: AtlasBundle = {
+  segments: SEGMENTS,
+  events: EVENTS,
+  places: PLACES,
+  polities: POLITIES,
+  sources: SOURCES,
+};
 
 export interface ValidationIssue {
   level: 'error' | 'warn';
@@ -70,7 +90,8 @@ const bbox = (g: [number, number][]) => {
 const bboxOverlap = (a: readonly number[], b: readonly number[]) =>
   a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
 
-export function validateAtlas(): ValidationIssue[] {
+export function validateAtlas(bundle: AtlasBundle = REAL_BUNDLE): ValidationIssue[] {
+  const { segments: SEGMENTS, events: EVENTS, places: PLACES, polities: POLITIES, sources: SOURCES } = bundle;
   const issues: ValidationIssue[] = [];
   const sourceIds = new Set(SOURCES.map((s) => s.id));
   const polityIds = new Set(POLITIES.map((p) => p.id));

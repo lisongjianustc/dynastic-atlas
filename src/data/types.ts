@@ -67,6 +67,12 @@ export interface Review {
   reviewerKind: 'human' | 'agent';
   reviewer: string;
   checkedAt: string;
+  /**
+   * 核验深度。**必须区分**，否则「已核验」会掩盖深浅不一的实情：
+   *   source —— 对着第三方正文逐条比对过
+   *   cross  —— 只做了年代与政权存续区间的交叉核对
+   */
+  depth?: 'source' | 'cross';
   note?: string;
 }
 
@@ -106,6 +112,12 @@ export interface Polity {
   from: Year;
   to: Year;
   validity?: Validity;
+  /**
+   * 分段存续。政权中断后复国时给出，例如西秦 385–400 为后秦所灭、409 复国。
+   * 时间轴泳道按它画**两段条带**，而不是一条连续的 —— 否则泳道会声称
+   * 这个政权在亡国期间仍然存在，与地图上的空白自相矛盾。
+   */
+  activePeriods?: [Year, Year][];
   color: string;
   capital?: { name: string; at: [number, number] };
   note?: string;
@@ -170,6 +182,7 @@ export interface Place {
   note?: string;
   evidence: Evidence[];
   sourceId: string;
+  review: Review;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

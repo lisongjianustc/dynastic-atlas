@@ -150,14 +150,42 @@ describe('校验器：编制留痕与审查', () => {
     expect(errs.some((e) => e.includes('reviewer'))).toBe(true);
   });
 
-  it('agent 给出的 verified 只能算 agent 核验，必须提示', () => {
+  it('有 agent 核验的记录时，必须汇总提示人工审定为 0', () => {
     const s = segment();
     const issues = validateAtlas(
       bundle({
-        segments: [{ ...s, review: { status: 'verified', reviewerKind: 'agent', reviewer: 'x', checkedAt: '2026-10-01' } }],
+        segments: [
+          { ...s, review: { status: 'verified', reviewerKind: 'agent', reviewer: 'x', checkedAt: '2026-10-01', depth: 'cross', note: '核过' } },
+        ],
       }),
     );
-    expect(issues.some((i) => i.level === 'warn' && i.what.includes('不等于专家审定'))).toBe(true);
+    const w = issues.find((i) => i.level === 'warn' && i.where === 'review');
+    expect(w, '没有汇总提示').toBeTruthy();
+    expect(w!.what).toContain('人工审定 0 条');
+  });
+
+  it('全都还是 pending 时不给这条提示', () => {
+    expect(validateAtlas(bundle()).some((i) => i.where === 'review')).toBe(false);
+  });
+
+  it('核验深度必须区分：逐条比对与交叉核对分开计数', () => {
+    const s = segment();
+    const mk = (depth: 'source' | 'cross') => ({
+      ...s,
+      review: { status: 'verified' as const, reviewerKind: 'agent' as const, reviewer: 'x', checkedAt: '2026-10-01', depth, note: '核过' },
+    });
+    const b = bundle();
+    b.segments = [mk('source'), { ...mk('cross'), id: 'seg-test-2', geometry: square(80, 40, 3) }];
+    const w = validateAtlas(b).find((i) => i.where === 'review');
+    expect(w!.what).toContain('逐条比对 1 条');
+  });
+
+  it('标为 verified 却没写核验说明 —— 直接判错', () => {
+    const s = segment();
+    const errs = errorsOf(
+      bundle({ segments: [{ ...s, review: { status: 'verified', reviewerKind: 'agent', reviewer: 'x', checkedAt: '2026-10-01' } }] }),
+    );
+    expect(errs.some((e) => e.includes('没有写核验说明'))).toBe(true);
   });
 });
 

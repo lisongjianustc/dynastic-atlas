@@ -125,8 +125,10 @@ test.describe('事件：只在当年显示，点开有出处', () => {
     await expect(panel).toContainText('咸通九年');
     await expect(panel).toContainText('出处');
     await expect(panel).toContainText('The Diamond Sutra');
-    // 未核验就必须说未核验
-    await expect(panel).toContainText('pending');
+    // 核验状态必须连**深度**一起显示，且必须点明 agent 核验不等于专家审定
+    await expect(panel).toContainText('审查');
+    await expect(panel).toContainText(/对正文逐条比对|仅年份交叉核对/);
+    await expect(panel).toContainText('非专家审定');
   });
 
   test('事件 URL 深链能还原选中状态', async ({ page }) => {
@@ -156,10 +158,16 @@ test.describe('控制层级图例', () => {
 });
 
 test.describe('资料来源的诚实性', () => {
-  test('资料覆盖面板如实报出 0 条已核验', async ({ page }) => {
+  test('资料覆盖面板把 agent 核验与人工审定分开，人工审定必须是 0', async ({ page }) => {
     await openAt(page, '?y=750&pv=coverage');
-    await expect(page.getByText(/全部待审/)).toBeVisible();
-    await expect(page.getByText('未经历史专业审定', { exact: true })).toBeVisible();
+    await expect(page.getByText('人工审定').first()).toBeVisible();
+    await expect(page.getByText(/未经专家复核/)).toBeVisible();
+    await expect(page.getByText('agent 已核验').first()).toBeVisible();
+  });
+
+  test('说明核验范围：边界几何未配准、事件因果未复核', async ({ page }) => {
+    await openAt(page, '?y=750&pv=coverage');
+    await expect(page.getByText(/边界几何未做控制点配准/).first()).toBeVisible();
   });
 
   test('说明哪些部分用了真实地理参照', async ({ page }) => {

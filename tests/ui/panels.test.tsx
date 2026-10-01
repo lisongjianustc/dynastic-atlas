@@ -6,7 +6,6 @@ import CoveragePanel from '../../src/panel/CoveragePanel';
 import Legend from '../../src/panel/Legend';
 import { useApp } from '../../src/state/store';
 import { COVERAGE, coverageAt } from '../../src/data/governance';
-import { EVENTS, SEGMENTS } from '../../src/data/atlas';
 
 afterEach(() => {
   cleanup();
@@ -28,12 +27,26 @@ describe('资料覆盖面板', () => {
     expect(screen.getByText(/空白表示尚缺资料，不表示当时没有政权或事件/)).toBeInTheDocument();
   });
 
-  it('如实报出已核验记录数为 0（没有就是没有）', () => {
+  it('把 agent 核验与人工审定分开报，人工审定必须是 0', () => {
     useApp.setState({ year: 410 });
     render(<CoveragePanel />);
-    const total = SEGMENTS.length + EVENTS.length;
-    expect(screen.getByText(new RegExp(`0 / ${total}`))).toBeInTheDocument();
-    expect(screen.getByText(/全部待审/)).toBeInTheDocument();
+    // 这一条是本项目最要紧的诚实性断言：没有专家复核过，就不许显示成有
+    expect(screen.getByText('人工审定')).toBeInTheDocument();
+    expect(screen.getByText(/未经专家复核/)).toBeInTheDocument();
+    expect(screen.getByText('agent 已核验')).toBeInTheDocument();
+  });
+
+  it('核验深度分开显示，不合并成一个「已核验」数字', () => {
+    useApp.setState({ year: 410 });
+    render(<CoveragePanel />);
+    // 摘要与缺口说明里都会出现，用 getAllByText 免得绑死在某一处
+    expect(screen.getAllByText(/逐条比对/).length).toBeGreaterThan(0);
+  });
+
+  it('注明边界几何未配准、事件因果未复核', () => {
+    useApp.setState({ year: 410 });
+    render(<CoveragePanel />);
+    expect(screen.getAllByText(/边界几何未做控制点配准/).length).toBeGreaterThan(0);
   });
 
   it('列出的缺口条数与数据层一致，且逐条渲染', () => {

@@ -10,23 +10,31 @@ import { useApp } from '../state/store';
 const SPAN = RANGE.to - RANGE.from;
 const pct = (y: number) => ((y - RANGE.from) / SPAN) * 100;
 
-/** 泳道打包：把互不重叠的政权压进同一行（甘特图式区间着色） */
-function packLanes() {
-  const sorted = [...POLITIES].sort((a, b) => a.from - b.from || a.to - b.to);
+/**
+ * 泳道打包：把互不重叠的政权压进同一行（甘特图式区间着色）。
+ *
+ * 分段存续的政权（如西秦 400–409 为后秦所灭、409 复国）出**两段条带**。
+ * 画成一条连续条带会与地图自相矛盾：地图上那九年是空白，泳道却声称它还在。
+ */
+export function packLanes() {
+  const bars = POLITIES.flatMap((p) =>
+    (p.activePeriods ?? [[p.from, p.to]]).map(([f, t]) => ({ id: p.id, from: f, to: t })),
+  ).sort((a, b) => a.from - b.from || a.to - b.to);
+
   const lanes: { id: string; from: number; to: number }[][] = [];
-  for (const p of sorted) {
-    const from = Math.max(p.from, RANGE.from);
-    const to = Math.min(p.to, RANGE.to);
+  for (const b of bars) {
+    const from = Math.max(b.from, RANGE.from);
+    const to = Math.min(b.to, RANGE.to);
     if (to <= from) continue;
     let placed = false;
     for (const lane of lanes) {
       if (lane[lane.length - 1].to <= from) {
-        lane.push({ id: p.id, from, to });
+        lane.push({ id: b.id, from, to });
         placed = true;
         break;
       }
     }
-    if (!placed) lanes.push([{ id: p.id, from, to }]);
+    if (!placed) lanes.push([{ id: b.id, from, to }]);
   }
   return lanes;
 }

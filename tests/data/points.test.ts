@@ -139,6 +139,11 @@ const CASES: PointCase[] = [
   { at: [117.13, 36.19], year: 405, city: '泰山', expect: ['nan_yan:core'], why: '泰山在南燕境内' },
   { at: [114.87, 38.52], year: 405, city: '中山', expect: [], reject: ['nan_yan'], why: '南燕不越黄河到河北' },
 
+  // ── 史料核对之后新增：西秦 400–409 年被后秦所灭，不是连续存在 ──
+  { at: [104.10, 35.85], year: 395, city: '苑川', expect: ['xi_qin:core'], why: '395 年西秦尚在，都苑川' },
+  { at: [104.10, 35.85], year: 405, city: '苑川', expect: [], reject: ['xi_qin'], why: '400 年西秦为后秦所灭，409 年才复国 —— 405 年不该有西秦' },
+  { at: [104.10, 35.85], year: 415, city: '苑川', expect: ['xi_qin:core'], why: '409 年乞伏乾归复国，415 年在' },
+
 ];
 
 describe('点落断言', () => {

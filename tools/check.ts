@@ -28,12 +28,16 @@ const byPrecision = SEGMENTS.reduce<Record<string, number>>(
   (a, s) => ((a[s.spatialPrecision] = (a[s.spatialPrecision] ?? 0) + 1), a),
   {},
 );
-const records = [...SEGMENTS, ...EVENTS];
-const reviewed = records.filter((r) => r.review.status !== 'pending').length;
+const records = [...SEGMENTS, ...EVENTS, ...PLACES];
+const reviewed = records.filter((r) => r.review.status === 'verified');
+const deep = reviewed.filter((r) => r.review.depth === 'source').length;
+const human = reviewed.filter((r) => r.review.reviewerKind === 'human').length;
 const withLocator = records.filter((r) => r.evidence.some((e) => e.locator)).length;
 
 console.log(`空间精度：${Object.entries(byPrecision).map(([k, v]) => `${k} ${v}`).join(' · ')}`);
-console.log(`审查：已核验 ${reviewed} / ${records.length}（其余 pending）`);
+console.log(
+  `审查：已核验 ${reviewed.length} / ${records.length}（逐条比对 ${deep} · 人工审定 ${human} · 其余 pending）`,
+);
 console.log(`页码级定位：${withLocator} / ${records.length} 条已填`);
 console.log(
   `覆盖声明：${COVERAGE.length} 条（missing ${COVERAGE.filter((c) => c.status === 'missing').length} · pending ${

@@ -109,8 +109,16 @@ export default function SidePanel() {
             );
           })}
           <p className="src-review">
-            审查：{event.review.status === 'pending' ? '未核验（pending）' : event.review.status} ·{' '}
-            {event.review.reviewerKind === 'agent' ? 'agent' : '人'} {event.review.reviewer} · {event.review.checkedAt}
+            审查：
+            {event.review.status === 'pending'
+              ? '未核验（pending）'
+              : `${event.review.depth === 'source' ? '对正文逐条比对' : '仅年份交叉核对'} · ${
+                  event.review.reviewerKind === 'agent' ? 'agent' : '人工'
+                } ${event.review.reviewer} · ${event.review.checkedAt}`}
+            {event.review.reviewerKind === 'agent' && event.review.status !== 'pending' && (
+              <span className="src-review-warn">（agent 核验，非专家审定）</span>
+            )}
+            {event.review.note && <span className="src-review-note">{event.review.note}</span>}
           </p>
         </div>
 

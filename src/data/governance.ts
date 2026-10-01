@@ -2,6 +2,7 @@ import type {
   AtlasEvent, Compilation, CoverageEntry, Evidence, Place, Polity,
   Review, Segment, SpatialPrecision, Validity, Year,
 } from './types';
+import { reviewFor } from './review';
 
 /**
  * 治理层 —— 证据、时间区间、审查、编制方法、覆盖声明。
@@ -54,6 +55,7 @@ export const CHECKED_AT = '2026-10-01';
 /**
  * 默认审查状态就是 pending，且必须这么说清楚。
  * 结构与几何过了机械校验，不等于有人逐条对过史料。
+ * 真的核过的记录在 src/data/review.ts 里，由 reviewFor() 取。
  */
 export const REVIEW_PENDING: Review = {
   status: 'pending',
@@ -169,7 +171,7 @@ export interface RawPolity extends Omit<Polity, 'evidence'> {
   evidence?: Evidence[];
 }
 
-export interface RawPlace extends Omit<Place, 'spatialPrecision' | 'evidence'> {
+export interface RawPlace extends Omit<Place, 'spatialPrecision' | 'evidence' | 'review'> {
   /** 旧字段：1 粗略 / 2 中等 */
   rank: 1 | 2;
   precision?: SpatialPrecision;
@@ -197,7 +199,7 @@ export const normalizeSegment = (r: RawSegment): Segment => {
     spatialPrecision: precisionOf(r.borderPrecision),
     confidence: r.confidence,
     compilation: compilationOf(r.id),
-    review: REVIEW_PENDING,
+    review: reviewFor('segment', r.id, r.polityId) ?? REVIEW_PENDING,
     evidence: evidenceFrom(r.sourceId, r.note, r.evidence),
     note: r.note,
     geometry: r.geometry,
@@ -218,7 +220,7 @@ export const normalizeEvent = (r: RawEvent): AtlasEvent => ({
   summary: r.summary,
   interpretation: r.interpretation,
   evidence: evidenceFrom(r.sourceId ?? r.evidence?.[0]?.sourceId ?? '', undefined, r.evidence),
-  review: REVIEW_PENDING,
+  review: reviewFor('event', r.id) ?? REVIEW_PENDING,
   sourceId: r.sourceId ?? r.evidence?.[0]?.sourceId ?? '',
 });
 
@@ -234,6 +236,7 @@ export const normalizePlace = (r: RawPlace): Place => ({
   note: r.note,
   evidence: evidenceFrom(r.sourceId, r.note, r.evidence),
   sourceId: r.sourceId,
+  review: reviewFor('place', r.id) ?? REVIEW_PENDING,
 });
 
 export const normalizePolity = (r: RawPolity): Polity => ({
@@ -299,7 +302,11 @@ export const COVERAGE: CoverageEntry[] = [
   },
   {
     id: 'no-human-review', startYear: -37, endYear: 960, topic: 'provenance', status: 'missing',
-    reason: '全部记录的 review.status 均为 pending —— 未经历史专业审定。软件测试与机械校验不等于史料复核。',
+    reason: '人工审定 0 条。已核验的记录全部出自 agent（claude），核验范围仅限年代与政权归属 —— 边界几何未做控制点配准，事件因果未复核。agent 核验不等于历史专业审定。',
+  },
+  {
+    id: 'review-depth', startYear: -37, endYear: 960, topic: 'provenance', status: 'pending',
+    reason: '已核验的记录里，只有少数是对着第三方正文逐条比对的；其余只做了「年代是否落在政权存续区间内」的交叉核对。两者在界面上分开显示，不合并成一个「已核验」数字。',
   },
   {
     id: 'event-detail', startYear: -37, endYear: 960, topic: 'event', status: 'pending',

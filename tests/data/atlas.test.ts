@@ -165,3 +165,53 @@ describe('来源的许可分级', () => {
     }
   });
 });
+
+describe('分段存续：中断期必须与地图一致', () => {
+  it('西秦 400–409 年不在地图上，泳道也不该画连续条带', () => {
+    const xiQin = POLITIES.find((p) => p.id === 'xi_qin')!;
+    expect(xiQin.activePeriods).toEqual([[385, 400], [409, 431]]);
+    // 中断的九年里不应有西秦的任何疆域段
+    for (const y of [401, 403, 405, 407]) {
+      expect(
+        activeSegmentsAt(y).filter((s) => s.polityId === 'xi_qin'),
+        `${y} 年不该有西秦`,
+      ).toEqual([]);
+    }
+    // 两侧都应该有
+    expect(activeSegmentsAt(395).some((s) => s.polityId === 'xi_qin')).toBe(true);
+    expect(activeSegmentsAt(415).some((s) => s.polityId === 'xi_qin')).toBe(true);
+  });
+
+  it('给了 activePeriods 的政权，其疆域段必须落在这些区间内', () => {
+    for (const p of POLITIES) {
+      if (!p.activePeriods) continue;
+      for (const s of SEGMENTS.filter((x) => x.polityId === p.id)) {
+        const inside = p.activePeriods.some(([f, t]) => s.from >= f && s.to <= t);
+        expect(inside, `${s.id} [${s.from},${s.to}) 落在 ${p.name} 的分段存续之外`).toBe(true);
+      }
+    }
+  });
+});
+
+describe('时间轴泳道', () => {
+  it('西秦出两段条带，中断期没有条 —— 与地图上的空白一致', async () => {
+    const { packLanes } = await import('../../src/timeline/Timeline');
+    const bars = packLanes().flat().filter((b) => b.id === 'xi_qin');
+    expect(bars.map((b) => [b.from, b.to])).toEqual([[385, 400], [409, 431]]);
+  });
+
+  it('不分段存续的政权仍只出一条', async () => {
+    const { packLanes } = await import('../../src/timeline/Timeline');
+    const tang = packLanes().flat().filter((b) => b.id === 'tang');
+    expect(tang).toHaveLength(1);
+  });
+
+  it('每一条条带的起止都落在视野内且非空', async () => {
+    const { packLanes } = await import('../../src/timeline/Timeline');
+    for (const b of packLanes().flat()) {
+      expect(b.to).toBeGreaterThan(b.from);
+      expect(b.from).toBeGreaterThanOrEqual(200);
+      expect(b.to).toBeLessThanOrEqual(960);
+    }
+  });
+});

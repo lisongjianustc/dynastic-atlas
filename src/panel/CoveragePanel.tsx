@@ -20,8 +20,10 @@ export default function CoveragePanel() {
   const year = useApp((s) => s.year);
   const entries = coverageAt(year);
 
-  const records = [...SEGMENTS, ...EVENTS];
-  const verified = records.filter((r) => r.review.status === 'verified').length;
+  const records = [...SEGMENTS, ...EVENTS, ...PLACES];
+  const verified = records.filter((r) => r.review.status === 'verified');
+  const deep = verified.filter((r) => r.review.depth === 'source').length;
+  const human = verified.filter((r) => r.review.reviewerKind === 'human').length;
   const noLocator = records.filter((r) => r.evidence.every((e) => !e.locator)).length;
   const denied = SOURCES.filter((s) => s.redistribution === 'denied').length;
 
@@ -45,10 +47,16 @@ export default function CoveragePanel() {
           </dd>
         </div>
         <div>
-          <dt>已核验记录</dt>
+          <dt>agent 已核验</dt>
           <dd>
-            {verified} / {records.length}
-            <span className="cov-warn"> · 全部待审</span>
+            {verified.length} / {records.length}
+            <span className="cov-warn"> · 逐条比对 {deep}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>人工审定</dt>
+          <dd>
+            {human} 条<span className="cov-bad"> · 未经专家复核</span>
           </dd>
         </div>
         <div>
@@ -82,8 +90,8 @@ export default function CoveragePanel() {
         共 {COVERAGE.length} 项覆盖记录 · {POLITIES.length} 政权 / {SEGMENTS.length} 疆域段 / {EVENTS.length} 事件 /{' '}
         {PLACES.length} 地点 / {SOURCES.length} 来源。
         <br />
-        全部记录的 <code>review.status</code> 为 pending —— <strong>未经历史专业审定</strong>。
-        机械校验与单元测试不等于史料复核。
+        <strong>人工审定 0 条。</strong>已核验的出自 agent（claude），范围仅限年代与政权归属 ——
+        <strong>边界几何未做控制点配准，事件因果未复核</strong>。机械校验与单元测试不等于史料复核。
       </p>
     </aside>
   );

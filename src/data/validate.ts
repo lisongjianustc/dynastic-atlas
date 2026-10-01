@@ -192,9 +192,6 @@ export function validateAtlas(bundle: AtlasBundle = REAL_BUNDLE): ValidationIssu
     if (review.status !== 'pending' && !review.reviewer) {
       push('error', where, `review.status=${review.status} 但没写 reviewer`, '软件测试不等于史料复核，必须留下实际核验者');
     }
-    if (review.status === 'verified' && review.reviewerKind === 'agent') {
-      push('warn', where, 'agent 给出的 verified 不等于专家审定，UI 必须如实呈现');
-    }
   };
 
   // ── 疆域段 ──
@@ -326,6 +323,27 @@ export function validateAtlas(bundle: AtlasBundle = REAL_BUNDLE): ValidationIssu
       push('error', `polity ${p.id}`, '整数区间与 validity 不一致');
     }
   }
+
+  // ── 审查口径：agent 核验不等于专家审定 ──
+  // 逐条报会淹掉其他提示，合并成一条汇总。
+  const allReviews = [
+    ...SEGMENTS.map((s) => s.review),
+    ...EVENTS.map((e) => e.review),
+    ...PLACES.map((p) => p.review),
+  ];
+  const verified = allReviews.filter((r) => r.status === 'verified');
+  const deep = verified.filter((r) => r.depth === 'source').length;
+  const human = verified.filter((r) => r.reviewerKind === 'human').length;
+  if (verified.length) {
+    push(
+      'warn',
+      'review',
+      `已核验 ${verified.length} / ${allReviews.length} 条，其中对第三方正文逐条比对 ${deep} 条，人工审定 ${human} 条。`,
+      'agent 核验不等于专家审定。核验范围仅限年代与归属，边界几何未做控制点配准 —— UI 必须如实呈现。',
+    );
+  }
+  const noEvidence = allReviews.filter((r) => r.status === 'verified' && !r.note).length;
+  if (noEvidence) push('error', 'review', `${noEvidence} 条记录标为 verified 却没有写核验说明`);
 
   // ── 同时并立政权的几何交叠 ──
   const overlaps = overlappingPairs(SEGMENTS);

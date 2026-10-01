@@ -68,8 +68,11 @@ export default function Legend({ issues }: { issues: ValidationIssue[] }) {
 
       <div className="legend-note">
         <strong>本图边界为示意。</strong>
-        所有面均按粗略精度绘制（<code>borderPrecision = 1</code>），边缘做了柔化处理，
-        以区别于有明确条约或政区依据的边界。P0 阶段的目标是验证交互与视觉语言，不是可引用的学术成果。
+        全部 {SEGMENTS.length} 段的空间精度都是 <code>approximate</code>，边缘做了柔化处理。
+        海岸线、长江、淮河、汉水、秦岭、阴山、昆仑已用真实地理参照，其余内陆分界仍是直线段 ——
+        哪一段可以信到哪里，记在每段的<code>编制</code>里。
+        <br />
+        缺口清单见上方「资料覆盖」。
       </div>
 
       <dl className="legend-meta">

@@ -320,7 +320,7 @@ function addAtlasLayers(map: MLMap) {
   map.addSource('territories', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addSource('events', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 
-  // 光晕层：P0 全部 borderPrecision=1，用柔化边缘明确「这是示意」
+  // 光晕层：spatialPrecision 非 specified 的段落一律柔化边缘，明确「这是示意」
   map.addLayer({
     id: 'terr-halo',
     type: 'line',

@@ -1,0 +1,34 @@
+历代疆域 / Dynastic Atlas
+Copyright 2026 lisongjianustc
+
+────────────────────────────────────────────────────────────────────────
+第三方数据与工具
+────────────────────────────────────────────────────────────────────────
+
+Natural Earth
+  许可：公有领域（Public Domain）
+  用途：自然地理底图（海岸线、河流、湖泊）与参照几何（山脉区域、河道）
+  分发：是。public/basemap/ 与构建期参照均取自本项目自行下载的 Natural Earth 数据。
+
+AtlasPI — Historical Geography API  <https://atlaspi.it>
+  许可：Apache License 2.0
+  用途：**构建期边界配准的独立参照**。用于量化本项目疆域面与外部数据源的
+        交并比、面积比与重心偏移，结果见 src/data/registration.ts。
+  分发：**否**。本项目未复制、未再分发 AtlasPI 的任何几何数据。
+        其 GeoJSON 仅存放于 tools/.ref/（已列入 .gitignore），
+        仓库与站点中只有对比得出的统计量与结论。
+  署名：AtlasPI 的完整许可文本见 https://www.apache.org/licenses/LICENSE-2.0
+
+────────────────────────────────────────────────────────────────────────
+仅作文献引用、未分发其数据的来源
+────────────────────────────────────────────────────────────────────────
+
+谭其骧主编《中国历史地图集》（中国地图出版社 1982）
+  许可：有著作权，仍在保护期内
+  用途：人工重绘时参考其结论。**未数字化、未复制其边界数据。**
+  见 src/data/sources.ts 中 src-tan-3 / src-tan-4 / src-tan-5 的 permissionEvidence。
+
+CHGIS 中国历史地理信息系统 v6（哈佛大学 · 复旦大学）
+  许可：学术非商业，限制再分发
+  用途：参考其治所点位体系与年份口径。**仓库内未分发任何 CHGIS 原始数据。**
+  见 src/data/sources.ts 中 src-chgis 的 permissionEvidence。

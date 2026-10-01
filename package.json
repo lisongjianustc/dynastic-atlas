@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "report": "mkdir -p .cache && esbuild tools/check.ts --bundle --platform=node --format=esm --outfile=.cache/check.mjs --log-level=error && node .cache/check.mjs"
+    "report": "mkdir -p .cache && esbuild tools/check.ts --bundle --platform=node --format=esm --outfile=.cache/check.mjs --log-level=error && node .cache/check.mjs",
+    "compare:ref": "mkdir -p .cache && esbuild tools/entry-for-compare.ts --bundle --platform=node --format=esm --outfile=.cache/atlas.mjs --log-level=error && node tools/compare-atlaspi.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^4.7.1",

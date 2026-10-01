@@ -180,7 +180,23 @@ export default function SidePanel() {
 
       <div className="sp-block">
         <h3>疆域分期（当前年份所在的一段已高亮）</h3>
-        <ul className="seg-list">
+        {polity?.registration && (
+        <div className={`sp-block sp-reg sp-reg-${polity.registration.verdict}`}>
+          <h3>外部配准对比</h3>
+          <p className="reg-line">
+            与 <strong>AtlasPI</strong>（Apache-2.0，独立数据源）在 {polity.registration.year} 年对比：
+            <br />
+            IoU <strong>{polity.registration.iou.toFixed(3)}</strong> · 面积比{' '}
+            {polity.registration.areaRatio.toFixed(2)} · 重心偏移 {polity.registration.centroidOffset.toFixed(2)}°
+            <span className={`reg-verdict ${polity.registration.verdict}`}>
+              {{ corroborated: '互相印证', close: '大致相符', divergent: '差异大·待查' }[polity.registration.verdict]}
+            </span>
+          </p>
+          {polity.registration.lead && <p className="reg-lead">{polity.registration.lead}</p>}
+        </div>
+      )}
+
+      <ul className="seg-list">
           {segments.map((s) => {
             const src = sourceById.get(s.evidence[0]?.sourceId ?? '');
             const isNow = activeHere.includes(s);

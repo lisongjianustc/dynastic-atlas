@@ -63,6 +63,20 @@ export const SOURCES: Source[] = [
     permissionEvidence: '公有领域，可自由再分发。本项目所用为其 110m/10m 自然地理要素（海岸线、河流、湖泊、山脉区域）。',
   },
 
+  {
+    id: 'src-atlaspi',
+    work: 'AtlasPI — Historical Geography API',
+    creator: 'AtlasPI',
+    edition: 'v6.99.97，2026-10-01 取 /v1/export/geojson',
+    url: 'https://atlaspi.it',
+    accessedAt: '2026-10-01',
+    redistribution: 'allowed',
+    license: 'Apache License 2.0',
+    permissionEvidence:
+      'Apache-2.0 允许再分发与改编（需保留署名与许可声明）。本项目**未复制、未再分发其几何数据**：' +
+      '该数据仅存放于构建期目录 tools/.ref/（已 gitignore），仓库与站点中只有对比得出的统计量。署名见 NOTICE。',
+  },
+
   // ── 正史与文献（公有领域） ──
   { id: 'src-sgz', work: '陈寿《三国志》', redistribution: 'allowed', license: '公有领域' },
   { id: 'src-jinshu', work: '房玄龄等《晋书》', redistribution: 'allowed', license: '公有领域' },

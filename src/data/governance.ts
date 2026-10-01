@@ -3,6 +3,7 @@ import type {
   Review, Segment, SpatialPrecision, Validity, Year,
 } from './types';
 import { reviewFor } from './review';
+import { attachRegistration } from './registration';
 
 /**
  * 治理层 —— 证据、时间区间、审查、编制方法、覆盖声明。
@@ -239,11 +240,12 @@ export const normalizePlace = (r: RawPlace): Place => ({
   review: reviewFor('place', r.id) ?? REVIEW_PENDING,
 });
 
-export const normalizePolity = (r: RawPolity): Polity => ({
-  ...r,
-  validity: r.validity ?? yearValidity(r.from, r.to),
-  evidence: r.evidence,
-});
+export const normalizePolity = (r: RawPolity): Polity =>
+  attachRegistration({
+    ...r,
+    validity: r.validity ?? yearValidity(r.from, r.to),
+    evidence: r.evidence,
+  });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 覆盖声明
@@ -295,6 +297,22 @@ export const COVERAGE: CoverageEntry[] = [
   {
     id: 'inland-boundaries', startYear: -37, endYear: 960, topic: 'territory', status: 'pending',
     reason: '黄河中段、长江、淮河、汉水、海岸线、秦岭、阴山、昆仑已用真实河道与山脉；其余内陆分界仍是直线段。',
+  },
+  {
+    id: 'registration-gaogouli', startYear: -37, endYear: 668, topic: 'territory', status: 'missing',
+    reason: '与 AtlasPI 独立数据对比 IoU 仅 0.24，面积只有对方的 1/4。5 世纪高句丽南界应在汉江一带，本项目很可能画小了，待重画。',
+  },
+  {
+    id: 'registration-bohai', startYear: 698, endYear: 926, topic: 'territory', status: 'missing',
+    reason: '与 AtlasPI 对比 IoU 0.27，面积只有对方的 0.39 倍。渤海盛期北界抵黑水靺鞨、东至日本海，本项目很可能画小了，待重画。',
+  },
+  {
+    id: 'registration-divergent-others', startYear: 200, endYear: 960, topic: 'territory', status: 'pending',
+    reason: '陈（IoU 0.14）与前秦（IoU 0.12）与参照差异极大。查下来两边各有问题：参照的陳朝缺交州、参照的前秦南界伸到交州一带。这两条需要人工裁定，目前照旧。',
+  },
+  {
+    id: 'registration-coverage', startYear: 200, endYear: 960, topic: 'territory', status: 'pending',
+    reason: '只与 16 个政权比得上（AtlasPI 没有三国，也几乎没有十六国碎片政权）。其余 23 个政权**仍然没有任何外部参照**，空间精度依旧只是自述。IoU 高也不等于画对了 —— 两套数据可能犯同一个错。',
   },
   {
     id: 'locators', startYear: -37, endYear: 960, topic: 'provenance', status: 'pending',

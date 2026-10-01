@@ -11,6 +11,7 @@
 import { EVENTS, POLITIES, SEGMENTS } from '../src/data/atlas';
 import { SOURCES } from '../src/data/sources';
 import { COVERAGE } from '../src/data/governance';
+import { REGISTRATION_STATS } from '../src/data/registration';
 import { PLACES } from '../src/data/places';
 import { INTERVALS, RANGE, TRANSITIONS, activeSegmentsAt, yearLabel } from '../src/data/state';
 import { validateAtlas } from '../src/data/validate';
@@ -39,6 +40,9 @@ console.log(
   `审查：已核验 ${reviewed.length} / ${records.length}（逐条比对 ${deep} · 人工审定 ${human} · 其余 pending）`,
 );
 console.log(`页码级定位：${withLocator} / ${records.length} 条已填`);
+console.log(
+  `外部配准：与 AtlasPI 比过 ${REGISTRATION_STATS.total} 个政权（互相印证 ${REGISTRATION_STATS.corroborated} · 大致相符 ${REGISTRATION_STATS.close} · 差异大 ${REGISTRATION_STATS.divergent}）`,
+);
 console.log(
   `覆盖声明：${COVERAGE.length} 条（missing ${COVERAGE.filter((c) => c.status === 'missing').length} · pending ${
     COVERAGE.filter((c) => c.status === 'pending').length

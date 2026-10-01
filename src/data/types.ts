@@ -122,6 +122,8 @@ export interface Polity {
   capital?: { name: string; at: [number, number] };
   note?: string;
   evidence?: Evidence[];
+  /** 与外部独立数据源的配准对比结果。见 src/data/registration.ts */
+  registration?: import('./registration').Registration;
 }
 
 export interface Segment {

@@ -3,6 +3,7 @@ import { PLACES } from '../../src/data/places';
 import { SOURCES } from '../../src/data/sources';
 import { RANGE, activeSegmentsAt, eventsAtYear } from '../../src/data/state';
 import { inRing } from '../fixtures/geo';
+import { REGISTRATION, REGISTRATION_STATS } from '../../src/data/registration';
 
 /**
  * 数据集层面的不变式。
@@ -157,11 +158,15 @@ describe('来源的许可分级', () => {
     expect(missing).toEqual([]);
   });
 
-  it('标为 allowed 的来源必须是真公有领域，不能顺手标', () => {
+  it('标为 allowed 的来源必须是真允许再分发的许可，不能顺手标', () => {
     const allowed = SOURCES.filter((s) => s.redistribution === 'allowed');
     expect(allowed.length).toBeGreaterThan(0);
     for (const s of allowed) {
-      expect(s.license, `${s.id} 标了 allowed 但许可说明可疑`).toMatch(/公有领域|Public Domain/);
+      // 公有领域，或署名即可是宽松许可 —— 都允许再分发。share-alike（GPL/CC-BY-SA/ODbL）不允许这么标。
+      expect(s.license, `${s.id} 标了 allowed 但许可说明可疑`).toMatch(
+        /公有领域|Public Domain|Apache|MIT|CC0|BSD/,
+      );
+      expect(s.license, `${s.id} 是 share-alike，不能标 allowed`).not.toMatch(/GPL|ShareAlike|Share-Alike|ODbL/);
     }
   });
 });
@@ -212,6 +217,50 @@ describe('时间轴泳道', () => {
       expect(b.to).toBeGreaterThan(b.from);
       expect(b.from).toBeGreaterThanOrEqual(200);
       expect(b.to).toBeLessThanOrEqual(960);
+    }
+  });
+});
+
+describe('外部配准对比', () => {
+  it('配准结果只挂在比得上的政权上，其余一律没有', () => {
+    const withReg = POLITIES.filter((p) => p.registration);
+    expect(withReg).toHaveLength(REGISTRATION_STATS.total);
+    // 十六国的碎片政权 AtlasPI 没有，不该凭空出现配准数字
+    for (const id of ['han_zhao', 'cheng_han', 'qian_liang', 'xia', 'nan_liang']) {
+      expect(POLITIES.find((p) => p.id === id)?.registration, `${id} 不该有配准结果`).toBeUndefined();
+    }
+  });
+
+  it('判定与 IoU 阈值一致，不允许自相矛盾', () => {
+    for (const [pid, r] of Object.entries(REGISTRATION)) {
+      const expected = r.iou >= 0.6 ? 'corroborated' : r.iou >= 0.4 ? 'close' : 'divergent';
+      expect(r.verdict, `${pid} 判定与 IoU ${r.iou} 不符`).toBe(expected);
+    }
+  });
+
+  it('差异大的必须写出待查说明 —— 只给数字不给出路等于没查', () => {
+    for (const [pid, r] of Object.entries(REGISTRATION)) {
+      if (r.verdict !== 'divergent') continue;
+      expect(r.lead, `${pid} 差异大却没写 lead`).toBeTruthy();
+      expect(r.lead!.length).toBeGreaterThan(30);
+    }
+  });
+
+  it('参照来源已在来源表登记', async () => {
+    const { sourceById } = await import('../../src/data/sources');
+    for (const r of Object.values(REGISTRATION)) {
+      const src = sourceById.get(r.reference);
+      expect(src, `来源未登记：${r.reference}`).toBeTruthy();
+      expect(src!.redistribution).toBe('allowed');
+      expect(src!.license).toContain('Apache');
+    }
+  });
+
+  it('对比年份落在该政权存续期内', () => {
+    for (const [pid, r] of Object.entries(REGISTRATION)) {
+      const p = POLITIES.find((x) => x.id === pid)!;
+      expect(r.year, `${pid} 的对比年份 ${r.year} 不在 ${p.from}-${p.to} 内`).toBeGreaterThanOrEqual(p.from);
+      expect(r.year).toBeLessThanOrEqual(p.to);
     }
   });
 });

@@ -1,0 +1,68 @@
+# 历史内容编制规范
+
+本文件是数据层的宪法。`src/data/validate.ts` 里的机械闸门逐条对应这里的条款。
+
+方法学来自 **HistoryMapV2**（同目录下的平行项目）—— 它把「哪些能发布、哪些只能留作缺口」
+写成了可执行规则。本项目保留了这套规则，但落到**有内容**的数据上。
+
+---
+
+1. **原始文件放 `tools/.ref`，保存 URL、下载日期与许可。**
+   受限原图与受限矢量一律不得进入 `public/` 或仓库。
+
+2. **每条主张单独记录出处定位与时间精度。**
+   `evidence: [{ sourceId, locator, note }]`，至少一条，且 `sourceId` 必须已在
+   `src/data/sources.ts` 登记。**没有出处，进不了库。**
+   机构网页也可能出错 —— 来源权威不等于结论正确。
+
+3. **政权身份与名称分开。实际控制不等于行政设置、臣属、影响或宣称。**
+   本项目用六级控制强度表达：
+   `core` 郡县直辖 / `military` 军事控制 / `indirect` 羁縻 / `tributary` 朝贡 /
+   `nominal` 名义册封 / `raided` 一度深入。
+   同一个政权在不同区域、不同年代可以有不同层级，这**不是**建模缺陷。
+
+4. **边界不在切片之间插值。只知某年就不要编造确日。**
+   时间用 `validity`（两端各带不确定范围的区间）表达，整数 `from`/`to` 由它机械展开。
+   `temporalSupport: snapshot` 的记录必须有 `snapshotYear`，不得在两个快照之间插值。
+
+5. **几何必须留痕。**
+   每段记录 `compilation.method`：是人工绘制示意，还是取自哪套参照几何。
+   取自 Natural Earth 的部分写清是海岸线／河道还是山脉中线。
+
+6. **事件摘要独立撰写，简洁复述已核验事实。**
+   史家的原因判断放 `interpretation` 字段，**不作为事实呈现**。
+
+7. **审查记录实际核验者。软件测试不等于史料复核。**
+   `review.status` 默认 `pending`；`verified` 必须写清是谁、什么时候核的。
+   agent 给出的 `verified` 只算 agent 核验，不等于专家审定。
+
+8. **缺口持续可见。**
+   `src/data/governance.ts` 的 `COVERAGE` 逐条列出缺什么、缺到什么程度，
+   并在「资料覆盖」面板里对用户可见。
+   **空白表示尚缺资料，不表示当时没有政权或事件。**
+
+9. **许可红线。**
+   `sources.ts` 的 `redistribution` 标 `denied` 的来源（谭其骧《中国历史地图集》、CHGIS v6）
+   只能作为结论参考，**其数据一律不得随站点发布**。
+   这类来源必须写 `permissionEvidence`，说明凭什么可以引用。
+
+---
+
+## 新增一条疆域时该做什么
+
+1. 在 `sources.ts` 登记来源（含 `redistribution` 与 `permissionEvidence`）。
+2. 在 `geo.ts` 组装外环。**能用真实地理参照就不要手画**：
+   - 海岸线／河道 → `tools/route.mjs` 沿真实折线走
+   - 山脉分水岭 → `tools/ridge.mjs` 取南北缘中线
+   - 区域本体 → `tools/gen-regions.mjs` 生成到 `src/data/regions.ts`
+3. 在 `atlas.ts` 写记录，`compilation` 写清编制方法。
+4. 在 `tools/points.ts` 加至少一条点落断言 —— **史地常识写成测试**。
+5. 跑 `npm run verify`。四道门全绿才算完成。
+6. 如果这条记录引入了新的未知，在 `COVERAGE` 里加一行。
+
+## 不得做的事
+
+- 把受限来源的矢量数据搬进仓库。
+- 为「看起来完整」而给某个政权编造边界。
+- 把 `review.status` 改成 `verified` 而没有实际核验者。
+- 用测试通过代替史料复核。

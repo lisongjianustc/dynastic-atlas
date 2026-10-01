@@ -1,4 +1,6 @@
 import type { Place } from './types';
+import type { RawPlace } from './governance';
+import { normalizePlace } from './governance';
 
 /**
  * 主要地点：州治、关隘、军镇。
@@ -8,7 +10,7 @@ import type { Place } from './types';
  *
  * rank 1 是「任何时候都该看见」的要冲；rank 2 是小比例尺下先让位的次要地点。
  */
-export const PLACES: Place[] = [
+const RAW_PLACES: RawPlace[] = [
   // ── 都城与州治 ──
   { id: 'luoyang', name: '洛阳', kind: 'seat', at: [112.45, 34.62], from: 220, to: 960, rank: 1, sourceId: 'src-chgis', note: '汉魏、西晋、北魏、隋唐东都' },
   { id: 'changan', name: '长安', kind: 'seat', at: [108.94, 34.27], from: 220, to: 960, rank: 1, sourceId: 'src-chgis', note: '西魏、北周、隋、唐都城' },
@@ -79,10 +81,12 @@ export const PLACES: Place[] = [
 ];
 
 /** 十六国时期新增的政权中枢 */
-PLACES.push(
+RAW_PLACES.push(
   { id: 'pingyang', name: '平阳', kind: 'seat', at: [111.51, 36.09], from: 304, to: 329, rank: 2, sourceId: 'src-tan-4', note: '汉赵都城' },
   { id: 'zhongshan', name: '中山', kind: 'seat', at: [114.87, 38.52], from: 384, to: 409, rank: 2, sourceId: 'src-tan-4', note: '后燕都城' },
   { id: 'longcheng', name: '龙城', kind: 'seat', at: [120.85, 41.10], from: 337, to: 436, rank: 2, sourceId: 'src-tan-4', note: '前燕、北燕都城' },
   { id: 'ledu', name: '乐都', kind: 'seat', at: [102.40, 36.48], from: 397, to: 414, rank: 2, sourceId: 'src-tan-4', note: '南凉都城' },
   { id: 'guanggu', name: '广固', kind: 'seat', at: [118.48, 36.70], from: 398, to: 410, rank: 2, sourceId: 'src-tan-4', note: '南燕都城' },
 );
+
+export const PLACES: Place[] = RAW_PLACES.map(normalizePlace);

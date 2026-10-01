@@ -1,4 +1,4 @@
-import type { Confidence, ControlLevel, EventType } from '../data/types';
+import type { Confidence, ControlLevel, EventType, SpatialPrecision } from '../data/types';
 
 /**
  * 控制强度六级 —— 本项目的核心视觉语言（DESIGN.md §4）。
@@ -25,6 +25,12 @@ export const CONTROL_STYLES: ControlStyle[] = [
 
 export const CONTROL_BY_LEVEL = new Map(CONTROL_STYLES.map((c) => [c.level, c]));
 export const CONTROL_LABEL = new Map(CONTROL_STYLES.map((c) => [c.level, c.label]));
+
+export const SPATIAL_LABEL: Record<SpatialPrecision, string> = {
+  specified: '边界有明确依据',
+  approximate: '边界为示意',
+  disputed: '边界有争议',
+};
 
 export const CONFIDENCE_LABEL: Record<Confidence, string> = {
   high: '可信度高',

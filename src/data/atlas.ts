@@ -1,30 +1,23 @@
-import type { AtlasEvent, Polity, Segment, Source } from './types';
+import type { Polity, Segment, AtlasEvent } from './types';
+import type { RawEvent, RawPolity, RawSegment } from './governance';
+import { normalizeEvent, normalizePolity, normalizeSegment } from './governance';
 import { RINGS, TANG_ANBEI, TANG_ANDONG, TANG_XIYU } from './geo';
 
 /**
- * P0 数据层。
+ * 数据层。
  *
- * 纪律（见 DESIGN.md §9）：
- *  1. 每个 Segment 必须有 sourceId —— 构建期由 tools/validate.ts 强制。
- *  2. P0 全部 borderPrecision = 1（粗略示意），confidence 多为 medium/low。
- *     这些面是为了验证交互与视觉语言，不是可以引用的学术成果。
+ * 书写形态是紧凑的（只写必要字段），治理字段由 governance 归一化补齐：
+ * 时间区间、证据链、审查状态、编制方法。权威值是 governance 展开后的形态。
+ *
+ * 纪律（见 docs/EDITORIAL.md）：
+ *  1. 每条记录必须能追到已登记的来源 —— 构建期强制。
+ *  2. 空间精度分 specified / approximate / disputed，不再用含糊的「粗略」。
+ *  3. 审查状态默认 pending：机械校验不等于史料复核。
  */
 
-export const SOURCES: Source[] = [
-  { id: 'src-tan-3', work: '谭其骧《中国历史地图集》', edition: '中国地图出版社 1982', locus: '第三册 三国·西晋', license: '有著作权 · 仅作绘图参考，未复制其数据' },
-  { id: 'src-tan-4', work: '谭其骧《中国历史地图集》', edition: '中国地图出版社 1982', locus: '第四册 东晋十六国·南北朝', license: '有著作权 · 仅作绘图参考，未复制其数据' },
-  { id: 'src-tan-5', work: '谭其骧《中国历史地图集》', edition: '中国地图出版社 1982', locus: '第五册 隋·唐·五代十国', license: '有著作权 · 仅作绘图参考，未复制其数据' },
-  { id: 'src-chgis', work: 'CHGIS 中国历史地理信息系统 v6', edition: '哈佛大学 · 复旦大学', locus: '治所点位与代表年份政区面', url: 'https://gis.harvard.edu/china-historical-gis', license: '学术非商业 · 限制再分发' },
-  { id: 'src-sgz', work: '陈寿《三国志》', license: '公有领域' },
-  { id: 'src-jinshu', work: '房玄龄等《晋书》', license: '公有领域' },
-  { id: 'src-zztsj', work: '司马光《资治通鉴》', license: '公有领域' },
-  { id: 'src-suishu', work: '魏徵等《隋书》', license: '公有领域' },
-  { id: 'src-jts', work: '刘昫等《旧唐书》', license: '公有领域' },
-  { id: 'src-xts', work: '欧阳修等《新唐书》', license: '公有领域' },
-  { id: 'src-zztj-jiaozhu', work: '《中国历史大事年表》', edition: '上海辞书出版社', license: '有著作权 · 仅作事件年表比对' },
-];
+export { SOURCES, sourceById } from './sources';
 
-export const POLITIES: Polity[] = [
+const RAW_POLITIES: RawPolity[] = [
   { id: 'wei', name: '曹魏', aliases: ['魏'], kind: 'dynasty', from: 220, to: 266, color: '#4E79A7', capital: { name: '洛阳', at: [112.45, 34.62] } },
   { id: 'shu', name: '蜀汉', aliases: ['蜀', '季汉'], kind: 'kingdom', from: 221, to: 263, color: '#59A14F', capital: { name: '成都', at: [104.07, 30.67] } },
   { id: 'wu', name: '东吴', aliases: ['吴'], kind: 'kingdom', from: 222, to: 280, color: '#E15759', capital: { name: '建业', at: [118.8, 32.06] } },
@@ -66,7 +59,7 @@ export const POLITIES: Polity[] = [
   { id: 'nanzhao', name: '南诏', kind: 'kingdom', from: 738, to: 902, color: '#A0522D', capital: { name: '太和城', at: [100.2, 25.6] } },
 ];
 
-export const SEGMENTS: Segment[] = [
+const RAW_SEGMENTS: RawSegment[] = [
   // ── 三国 ──
   { id: 'wei-01', polityId: 'wei', from: 220, to: 266, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-3', geometry: RINGS.wei, note: '辽东 238 年灭公孙渊后入版图，此处一并画出' },
   { id: 'shu-01', polityId: 'shu', from: 221, to: 263, control: 'core', borderPrecision: 1, confidence: 'medium', sourceId: 'src-tan-3', geometry: RINGS.shu },
@@ -136,7 +129,19 @@ export const SEGMENTS: Segment[] = [
   { id: 'tubo-03', polityId: 'tubo', from: 850, to: 877, control: 'core', borderPrecision: 1, confidence: 'low', sourceId: 'src-tan-5', geometry: RINGS.tubo, note: '归义军复河西，吐蕃退保高原；877 年后诸部林立，本图不再表示' },
 ];
 
-export const EVENTS: AtlasEvent[] = [
+const RAW_EVENTS: RawEvent[] = [
+  // ── 并入自 HistoryMapV2 的东亚文化／制度事件 ──
+  // 本项目原有事件全是政治军事；这一组补上了宗教、技术、都城的维度，
+  // 且每条都带机构来源（UNESCO / IDP / MET / 地方政府）的具体定位。
+  { id: 'E100', title: '孙权于武昌称帝', y: 229, at: [114.89, 30.40], place: '武昌（今鄂州）', polityIds: ['wu'], persons: ['孙权'], importance: 4, type: '建制', summary: '孙权在武昌即帝位，国号吴，随后还都建业。三国鼎立至此三家皆已称帝。', evidence: [{ sourceId: 'ezhou-wu', locator: '孙权迁鄂、229年称帝及武昌城段', note: '地名用于历史条目关联；坐标仅为遗产点位的近似参考。' }] },
+  { id: 'E101', title: '云冈石窟早期营造', y: 460, at: [113.12, 40.11], place: '平城云冈', polityIds: ['wei_n'], persons: ['昙曜'], importance: 4, type: '宗教', summary: '北魏文成帝年间，昙曜主持开凿云冈五窟。石窟营造延续至 494 年迁都洛阳前后。', interpretation: '造像风格由犍陀罗式转向汉式，通常被解释为北魏汉化进程的物证；但各窟年代与主持者的对应仍有异说。', evidence: [{ sourceId: 'unesco-yungang', locator: '遗产简介的年代与位置段', note: '仅摘取年代与位置事实。' }] },
+  { id: 'E102', title: '隋与高句丽战争', y: 598, at: [123.17, 41.27], place: '辽东城', polityIds: ['sui', 'gaogouli'], persons: ['隋炀帝'], importance: 4, type: '战争', summary: '隋文帝末年至炀帝年间四次大举征辽，均未克。612 年隋军渡辽水围攻辽东城不下的记载最为详备。', interpretation: '征辽与开运河、筑长城并称隋末民变主因，此说流行但权重各家不同。', evidence: [{ sourceId: 'met-late', locator: 'Sui dynasty 段', note: '仅采用战争年代与方位事实。' }] },
+  { id: 'E103', title: '法隆寺创建', y: 607, at: [135.73, 34.61], place: '大和斑鸠', polityIds: [], persons: ['圣德太子'], importance: 3, type: '宗教', summary: '日本推古朝建斑鸠寺（后称法隆寺）。现存金堂、五重塔为 7 世纪末重建，是世界最古老的木构建筑群之一。', evidence: [{ sourceId: 'met-late', locator: 'Japan 段', note: '仅采用创建年代与位置事实。' }] },
+  { id: 'E104', title: '百济覆亡', y: 660, at: [126.90, 36.28], place: '泗沘', polityIds: ['tang'], persons: ['苏定方', '义慈王'], importance: 4, type: '战争', summary: '唐与新罗联军攻破泗沘，百济义慈王出降。663 年白江口一战，百济复国势力与日本援军被唐军击溃。', evidence: [{ sourceId: 'met-korea', locator: 'Three Kingdoms 段', note: '仅采用年代与方位事实。' }] },
+  { id: 'E105', title: '龙门奉先寺大像营造', y: 672, at: [112.48, 34.55], place: '洛阳龙门', polityIds: ['tang'], persons: ['唐高宗', '武则天'], importance: 3, type: '宗教', summary: '奉先寺卢舍那大像龛开凿，约至上元二年（675）完工。武则天助脂粉钱二万贯的记载见于碑刻。', evidence: [{ sourceId: 'unesco-longmen', locator: '遗产简介的位置段', note: '仅摘取位置事实。' }] },
+  { id: 'E106', title: '迁都平城京', y: 710, at: [135.80, 34.69], place: '平城京', polityIds: [], persons: [], importance: 3, type: '迁都', summary: '日本元明天皇迁都平城京（今奈良），仿唐长安里坊制布局。', evidence: [{ sourceId: 'met-late', locator: 'Japan 段', note: '仅采用年代与位置事实。' }] },
+  { id: 'E107', title: '迁都平安京', y: 794, at: [135.76, 35.01], place: '平安京', polityIds: [], persons: ['桓武天皇'], importance: 3, type: '迁都', summary: '桓武天皇迁都平安京（今京都），此后千余年为日本都城所在。', evidence: [{ sourceId: 'met-late', locator: 'Japan 段', note: '仅采用年代与位置事实。' }] },
+  { id: 'E108', title: '咸通九年《金刚经》印本', y: 868, at: [94.66, 40.14], place: '敦煌', polityIds: ['tang'], persons: ['王玠'], importance: 4, type: '科技', summary: '敦煌所出《金刚经》卷末刻有「咸通九年四月十五日王玠为二亲敬造普施」刊记，是现存有明确纪年的最早雕版印刷品之一。', evidence: [{ sourceId: 'idp-diamond', locator: 'The Diamond Sutra 页面刊记段', note: '仅采用刊记年代事实，未使用其图像。' }] },
   { id: 'E001', title: '曹丕代汉', y: 220, at: [112.45, 34.62], place: '洛阳', polityIds: ['wei'], persons: ['曹丕', '汉献帝'], importance: 5, type: '建制', summary: '曹丕受禅称帝，改元黄初，四百年汉室告终，三国鼎立之势成形。', sourceId: 'src-sgz' },
   { id: 'E002', title: '刘备称帝', y: 221, at: [104.07, 30.67], place: '成都', polityIds: ['shu'], persons: ['刘备'], importance: 4, type: '建制', summary: '刘备即位于成都，国号汉，以继汉统自居。', sourceId: 'src-sgz' },
   { id: 'E003', title: '夷陵之战', y: 222, at: [111.45, 30.55], place: '猇亭', polityIds: ['wu', 'shu'], persons: ['陆逊', '刘备'], importance: 5, type: '战争', summary: '陆逊火攻连营，蜀军大溃。蜀汉元气大伤，荆州归属自此定于吴。', sourceId: 'src-sgz' },
@@ -211,3 +216,8 @@ export const EVENTS: AtlasEvent[] = [
   { id: 'E060', title: '回鹘建国', y: 744, at: [102.8, 47.6], place: '漠北', polityIds: ['huihu'], persons: ['骨力裴罗'], importance: 3, type: '建制', summary: '灭后突厥建回鹘汗国，安史之乱中出兵助唐平叛。', sourceId: 'src-jts' },
   { id: 'E061', title: '大祚荣建渤海', y: 698, at: [120.85, 41.1], place: '营州', polityIds: ['bohai'], persons: ['大祚荣'], importance: 3, type: '建制', summary: '粟末靺鞨东走建国，后受唐册封为渤海郡王，史称海东盛国。', sourceId: 'src-jts' },
 ];
+
+// ── 归一化：权威形态 ──
+export const POLITIES: Polity[] = RAW_POLITIES.map(normalizePolity);
+export const SEGMENTS: Segment[] = RAW_SEGMENTS.map(normalizeSegment);
+export const EVENTS: AtlasEvent[] = RAW_EVENTS.map(normalizeEvent);

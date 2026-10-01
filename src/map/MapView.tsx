@@ -48,7 +48,7 @@ function toFeatures() {
           name: polity?.name ?? s.polityId,
           color: polity?.color ?? '#888',
           control: s.control,
-          borderPrecision: s.borderPrecision,
+          spatialPrecision: s.spatialPrecision,
           confidence: s.confidence,
           note: s.note ?? '',
           from: s.from,
@@ -325,7 +325,7 @@ function addAtlasLayers(map: MLMap) {
     id: 'terr-halo',
     type: 'line',
     source: 'territories',
-    filter: ['==', ['get', 'borderPrecision'], 1],
+    filter: ['!=', ['get', 'spatialPrecision'], 'specified'],
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': ['get', 'color'], 'line-width': 7, 'line-blur': 6, 'line-opacity': 0 },
   });

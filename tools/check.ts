@@ -3,6 +3,8 @@
  *   npx esbuild tools/check.ts --bundle --platform=node --format=esm --outfile=/tmp/atlas-check.mjs && node /tmp/atlas-check.mjs
  */
 import { EVENTS, POLITIES, SEGMENTS } from '../src/data/atlas';
+import { SOURCES } from '../src/data/sources';
+import { COVERAGE } from '../src/data/governance';
 import { PLACES } from '../src/data/places';
 import { INTERVALS, RANGE, TRANSITIONS, activeSegmentsAt, yearLabel } from '../src/data/state';
 import { validateAtlas } from '../src/data/validate';
@@ -12,7 +14,12 @@ const issues = validateAtlas();
 const errors = issues.filter((i) => i.level === 'error');
 const warns = issues.filter((i) => i.level === 'warn');
 
-console.log(`政权 ${POLITIES.length} · 疆域段 ${SEGMENTS.length} · 事件 ${EVENTS.length} · 地点 ${PLACES.length} · 状态区间 ${INTERVALS.length}`);
+console.log(`政权 ${POLITIES.length} · 疆域段 ${SEGMENTS.length} · 事件 ${EVENTS.length} · 地点 ${PLACES.length} · 来源 ${SOURCES.length} · 状态区间 ${INTERVALS.length}`);
+const byPrecision = SEGMENTS.reduce<Record<string, number>>((a, s) => ((a[s.spatialPrecision] = (a[s.spatialPrecision] ?? 0) + 1), a), {});
+const reviewed = [...SEGMENTS, ...EVENTS].filter((r) => r.review.status !== 'pending').length;
+console.log(`空间精度：${Object.entries(byPrecision).map(([k, v]) => `${k} ${v}`).join(' · ')}`);
+console.log(`审查：已核验 ${reviewed} 条 / 共 ${SEGMENTS.length + EVENTS.length} 条（其余为 pending）`);
+console.log(`覆盖声明：${COVERAGE.length} 条（missing ${COVERAGE.filter(c=>c.status==='missing').length} · pending ${COVERAGE.filter(c=>c.status==='pending').length} · verified ${COVERAGE.filter(c=>c.status==='verified').length}）`);
 console.log(`校验：${errors.length} 错误 / ${warns.length} 提示`);
 for (const i of errors) console.log(`  ✗ [${i.where}] ${i.what}`);
 for (const i of warns) console.log(`  ! [${i.where}] ${i.what}`);

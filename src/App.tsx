@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './map/MapView';
 import Timeline from './timeline/Timeline';
 import Legend from './panel/Legend';
+import CoveragePanel from './panel/CoveragePanel';
 import SidePanel from './panel/SidePanel';
 import { RANGE, TRANSITIONS, intervalIndexAt, yearLabel } from './data/state';
 import { POLITIES } from './data/atlas';
@@ -19,6 +20,8 @@ export default function App() {
   const selectedPolityId = useApp((s) => s.selectedPolityId);
 
   const [legendOpen, setLegendOpen] = useState(true);
+  const panelView = useApp((s) => s.panelView);
+  const setPanelView = useApp((s) => s.setPanelView);
   const [banner, setBanner] = useState<string | null>(null);
   const bannerTimer = useRef<number | undefined>(undefined);
 
@@ -93,8 +96,9 @@ export default function App() {
     q.set('y', String(year));
     if (selectedEventId) q.set('evt', selectedEventId);
     if (selectedPolityId) q.set('p', selectedPolityId);
+    if (panelView === 'coverage') q.set('pv', 'coverage');
     window.history.replaceState(null, '', `${window.location.pathname}?${q.toString()}`);
-  }, [year, selectedEventId, selectedPolityId]);
+  }, [year, selectedEventId, selectedPolityId, panelView]);
 
   // 地图聚焦请求（面板里的「在地图上聚焦」）
   useEffect(() => {
@@ -151,14 +155,24 @@ export default function App() {
           </select>
         </div>
 
+        <button className="tbtn ghost" onClick={() => setPanelView('legend')}>
+          图例
+        </button>
+        <button
+          className={`tbtn ghost${panelView === 'coverage' ? ' on' : ''}`}
+          onClick={() => setPanelView('coverage')}
+          title="资料覆盖：这个项目还缺什么"
+        >
+          资料覆盖
+        </button>
         <button className="tbtn ghost" onClick={() => setLegendOpen(!legendOpen)}>
-          {legendOpen ? '收起图例' : '图例'}
+          {legendOpen ? '收起' : '展开'}
         </button>
       </header>
 
       <main className="stage">
         <MapView />
-        {legendOpen && <Legend issues={issues} />}
+        {legendOpen && (panelView === 'coverage' ? <CoveragePanel /> : <Legend issues={issues} />)}
         <SidePanel />
         <div className={`banner${banner ? ' show' : ''}`}>{banner}</div>
         <div className="hint">

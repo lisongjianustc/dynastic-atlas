@@ -277,10 +277,19 @@ HistoryMap/
 
 ## 9. 把"按历史实际"做成工程机制，而不是口号
 
-1. **出处强制**：每个 segment 必须有 `sourceId`，构建期 Zod + 自定义校验，缺了就 CI 红。**无源数据进不了主干。**
-2. **不确定性是一等公民**：`borderPrecision=1` 永远模糊边；`confidence=low` 的面加 `?` 角标；图例常驻。
+> 本节在并入 HistoryMapV2 的治理模型后重写。完整规范见 [`docs/EDITORIAL.md`](docs/EDITORIAL.md)，
+> 机械闸门见 `src/data/validate.ts`。
+
+1. **出处强制**：每条疆域段／事件／地点必须有 `evidence[]`（≥1 条）且指向已登记的来源，缺了就 CI 红。**无源数据进不了主干。** 来源本身还带 `redistribution` 与 `permissionEvidence` —— 受限来源必须写清凭什么可以引用它。
+2. **不确定性是一等公民**：`spatialPrecision` 分 `specified / approximate / disputed`，`approximate` 与 `disputed` 永远画模糊边；时间用 `validity` 区间而不是点；`temporalSupport: snapshot` 的记录禁止插值。
 3. **首次进入弹一次说明**（只弹一次，存 localStorage）：古代疆域多为势力范围，本图为学术示意，非主权声明，非现代国界精度。
 4. **数据版本化**：脚注常显 `数据版本 v0.3 · 2025-10-01`，每次发布打 tag。
+
+4b. **审查独立于测试**：`review.status` 默认 `pending`；改成 `verified` 必须留下实际核验者与日期。
+   **软件测试不等于史料复核** —— 这一条写进了校验器和编辑规范。
+
+4c. **缺口显式可见**：`COVERAGE` 逐条声明缺什么、缺到什么程度，并在「资料覆盖」面板对用户可见。
+   与其在页脚写一句「本图仅供参考」，不如把缺口摆出来，让用户自己判断哪部分可以信。
 5. **每条事实可回溯**：政权详情页底部列出全部参考图集与页码。
 6. **禁用现代国界底图**（写进 code review checklist）。
 7. **敏感区域策略**：早期版本主动回避近现代争议地区的精细边界；呈现时强调"历史时期势力范围"，与当代主权议题脱钩。这一条要在贡献指南里明确，否则社区贡献会失控。

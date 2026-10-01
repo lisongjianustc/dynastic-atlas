@@ -15,6 +15,8 @@ interface AppState {
   showLabels: boolean;
   showRivers: boolean;
   showPlaces: boolean;
+  /** 左侧面板：图例 / 资料覆盖 */
+  panelView: 'legend' | 'coverage';
   showOnlyCore: boolean;
 
   setYear: (y: number, opts?: { keepSelection?: boolean }) => void;
@@ -28,6 +30,7 @@ interface AppState {
   toggleLabels: () => void;
   toggleRivers: () => void;
   togglePlaces: () => void;
+  setPanelView: (v: 'legend' | 'coverage') => void;
   reset: () => void;
 }
 
@@ -58,6 +61,7 @@ export const useApp = create<AppState>((set, get) => ({
   showLabels: true,
   showRivers: true,
   showPlaces: true,
+  panelView: fromUrl('pv', null) === 'coverage' ? 'coverage' : 'legend',
   showOnlyCore: false,
 
   setYear: (y, opts) =>
@@ -80,6 +84,7 @@ export const useApp = create<AppState>((set, get) => ({
   toggleLabels: () => set((s) => ({ showLabels: !s.showLabels })),
   toggleRivers: () => set((s) => ({ showRivers: !s.showRivers })),
   togglePlaces: () => set((s) => ({ showPlaces: !s.showPlaces })),
+  setPanelView: (v) => set((s) => ({ panelView: s.panelView === v ? 'legend' : v })),
   reset: () => set({ year: initialYear, playing: false, selectedEventId: null, selectedPolityId: null, hiddenControls: [] }),
 }));
 

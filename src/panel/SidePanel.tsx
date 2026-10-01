@@ -1,6 +1,6 @@
 import { EVENTS, POLITIES, SOURCES } from '../data/atlas';
 import { segmentsOfPolity, yearLabel } from '../data/state';
-import { CONFIDENCE_LABEL, CONTROL_LABEL, EVENT_TYPE_COLORS, CONTROL_BY_LEVEL } from '../map/controlStyles';
+import { CONFIDENCE_LABEL, CONTROL_LABEL, EVENT_TYPE_COLORS, CONTROL_BY_LEVEL, SPATIAL_LABEL } from '../map/controlStyles';
 import { useApp } from '../state/store';
 
 const sourceById = new Map(SOURCES.map((s) => [s.id, s]));
@@ -40,8 +40,6 @@ export default function SidePanel() {
     const idx = EVENTS.findIndex((e) => e.id === event.id);
     const prev = EVENTS[idx - 1];
     const next = EVENTS[idx + 1];
-    const src = sourceById.get(event.sourceId);
-
     return (
       <aside className="side-panel">
         <button className="close-btn" onClick={close} aria-label="关闭">
@@ -99,11 +97,29 @@ export default function SidePanel() {
 
         <div className="sp-block">
           <h3>出处</h3>
-          <p className="src">
-            {src?.work}
-            {src?.locus ? `·${src.locus}` : ''}
+          {event.evidence.map((e, i) => {
+            const es = sourceById.get(e.sourceId);
+            return (
+              <p className="src" key={i}>
+                {es?.work ?? e.sourceId}
+                {es?.locus ? `·${es.locus}` : ''}
+                {e.locator && <span className="src-loc"> · {e.locator}</span>}
+                {e.note && <span className="src-note">{e.note}</span>}
+              </p>
+            );
+          })}
+          <p className="src-review">
+            审查：{event.review.status === 'pending' ? '未核验（pending）' : event.review.status} ·{' '}
+            {event.review.reviewerKind === 'agent' ? 'agent' : '人'} {event.review.reviewer} · {event.review.checkedAt}
           </p>
         </div>
+
+        {event.interpretation && (
+          <div className="sp-block sp-interp">
+            <h3>解释 · 不等于史实</h3>
+            <p>{event.interpretation}</p>
+          </div>
+        )}
 
         <div className="sp-actions">
           <button className="primary" onClick={() => setYear(event.y, { keepSelection: true })}>
@@ -158,7 +174,7 @@ export default function SidePanel() {
         <h3>疆域分期（当前年份所在的一段已高亮）</h3>
         <ul className="seg-list">
           {segments.map((s) => {
-            const src = sourceById.get(s.sourceId);
+            const src = sourceById.get(s.evidence[0]?.sourceId ?? '');
             const isNow = activeHere.includes(s);
             const cs = CONTROL_BY_LEVEL.get(s.control)!;
             return (
@@ -171,13 +187,15 @@ export default function SidePanel() {
                   </span>
                 </div>
                 <div className="seg-meta">
-                  边界精度 {s.borderPrecision}/3 · {CONFIDENCE_LABEL[s.confidence]}
+                  {SPATIAL_LABEL[s.spatialPrecision]} · {CONFIDENCE_LABEL[s.confidence]} · 审查 {s.review.status}
                 </div>
                 {s.note && <div className="seg-note">{s.note}</div>}
                 <div className="seg-src">
                   出处：{src?.work}
                   {src?.locus ? `·${src.locus}` : ''}
+                  {(s.evidence[0]?.locator ?? '') && ` · ${s.evidence[0].locator}`}
                 </div>
+                <div className="seg-compile">编制：{s.compilation.method}</div>
                 <div className="seg-legend">{cs?.desc}</div>
               </li>
             );
